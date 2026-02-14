@@ -9,6 +9,14 @@ router = APIRouter()
 
 @router.post("/", response_model=schemas.PessoaJuridica)
 def criar_pessoa_juridica(pessoa: schemas.PessoaJuridicaCreate, db: Session = Depends(get_db)):
+    db_cnpj = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.cnpj == pessoa.cnpj).first()
+    if db_cnpj:
+        raise HTTPException(status_code=400, detail="CNPJ já cadastrado")
+        
+    db_sigla = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.sigla == pessoa.sigla).first()
+    if db_sigla:
+        raise HTTPException(status_code=400, detail="Sigla já cadastrada")
+
     db_pessoa = PessoaJuridicaModel(**pessoa.model_dump())
     db.add(db_pessoa)
     db.commit()
@@ -33,7 +41,7 @@ def atualizar_pessoa_juridica(pessoa_id: int, pessoa: schemas.PessoaJuridicaUpda
     if db_pessoa is None:
         raise HTTPException(status_code=404, detail="Pessoa Jurídica não encontrada")
     
-    for key, value in pessoa.model_dump(exclude_unset=True).items():
+    for key, value in pessoa.model_dump().items():
         setattr(db_pessoa, key, value)
     
     db.commit()

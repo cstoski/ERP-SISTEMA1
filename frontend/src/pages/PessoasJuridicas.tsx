@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { pessoaJuridicaService, PessoaJuridica, PessoaJuridicaCreate } from '../services/pessoaJuridicaService';
+import { contatoService, Contato } from '../services/contatoService';
 
 function PessoasJuridicas() {
+  const navigate = useNavigate();
   const [pessoas, setPessoas] = useState<PessoaJuridica[]>([]);
   const [pessoasFiltradas, setPessoasFiltradas] = useState<PessoaJuridica[]>([]);
   const [loading, setLoading] = useState(true);
@@ -9,10 +12,14 @@ function PessoasJuridicas() {
   const [visualizando, setVisualizando] = useState<PessoaJuridica | null>(null);
   const [editando, setEditando] = useState<PessoaJuridica | null>(null);
   const [filtro, setFiltro] = useState('');
+  const [cnpjError, setCnpjError] = useState('');
+  const [contatos, setContatos] = useState<Contato[]>([]);
+  
   const [formData, setFormData] = useState<PessoaJuridicaCreate>({
     razao_social: '',
     nome_fantasia: '',
     sigla: '',
+    tipo: 'Cliente',
     cnpj: '',
     inscricao_estadual: '',
     inscricao_municipal: '',
@@ -59,10 +66,78 @@ function PessoasJuridicas() {
       );
     });
     setPessoasFiltradas(filtradas);
+  }
+
+  const validateCnpj = (cnpj: string): boolean => {
+    cnpj = cnpj.replace(/[^\d]+/g, '');
+
+    if (cnpj.length !== 14) {
+      setCnpjError('CNPJ deve conter 14 dígitos');
+      return false;
+    }
+
+    if (/^(\d)\1+$/.test(cnpj)) {
+      setCnpjError('CNPJ inválido (dígitos repetidos)');
+      return false;
+    }
+
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0, tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado !== parseInt(digitos.charAt(0))) {
+      setCnpjError('CNPJ inválido');
+      return false;
+    }
+
+    tamanho = tamanho + 1;
+    numeros = cnpj.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado !== parseInt(digitos.charAt(1))) {
+      setCnpjError('CNPJ inválido');
+      return false;
+    }
+
+    setCnpjError('');
+    return true;
+  };
+
+  const formatCnpj = (cnpj: string) => {
+    if (!cnpj) return '';
+    const cnpjLimp = cnpj.replace(/[^\d]/g, '');
+    if (cnpjLimp.length !== 14) return cnpj; // Retorna o valor original se não tiver 14 dígitos
+    return cnpjLimp.replace(
+      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+      '$1.$2.$3/$4-$5'
+    );
+  };
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^\d]/g, '');
+    if (rawValue.length <= 14) {
+      validateCnpj(rawValue);
+      setFormData({ ...formData, cnpj: rawValue });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateCnpj(formData.cnpj)) {
+      alert('Por favor, corrija os erros antes de salvar.');
+      return;
+    }
     try {
       if (editando) {
         await pessoaJuridicaService.atualizar(editando.id, formData);
@@ -75,6 +150,7 @@ function PessoasJuridicas() {
         razao_social: '',
         nome_fantasia: '',
         sigla: '',
+        tipo: 'Cliente',
         cnpj: '',
         inscricao_estadual: '',
         inscricao_municipal: '',
@@ -86,9 +162,10 @@ function PessoasJuridicas() {
         pais: 'Brasil',
       });
       carregarPessoas();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar pessoa jurídica:', error);
-      alert('Erro ao salvar. Verifique os dados e tente novamente.');
+      const errorMessage = error.response?.data?.detail || 'Erro ao salvar. Verifique os dados e tente novamente.';
+      alert(errorMessage);
     }
   };
 
@@ -99,6 +176,7 @@ function PessoasJuridicas() {
       razao_social: pessoa.razao_social,
       nome_fantasia: pessoa.nome_fantasia || '',
       sigla: pessoa.sigla || '',
+      tipo: pessoa.tipo || 'Cliente',
       cnpj: pessoa.cnpj,
       inscricao_estadual: pessoa.inscricao_estadual || '',
       inscricao_municipal: pessoa.inscricao_municipal || '',
@@ -112,9 +190,17 @@ function PessoasJuridicas() {
     setShowForm(true);
   };
 
-  const handleView = (pessoa: PessoaJuridica) => {
+  const handleView = async (pessoa: PessoaJuridica) => {
     setVisualizando(pessoa);
     setShowForm(false);
+    setEditando(null);
+    try {
+      const response = await contatoService.listar(pessoa.id);
+      setContatos(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar contatos:", error);
+      setContatos([]);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -128,7 +214,27 @@ function PessoasJuridicas() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const handleEditContato = (contatoId: number) => {
+    navigate(`/contatos?edit=${contatoId}`);
+  };
+
+  const handleDeleteContato = async (id: number) => {
+    if (window.confirm('Deseja realmente deletar este contato?')) {
+      try {
+        await contatoService.deletar(id);
+        if (visualizando) {
+          // Recarrega os contatos da pessoa jurídica atual
+          const response = await contatoService.listar(visualizando.id);
+          setContatos(response.data);
+        }
+      } catch (error) {
+        console.error('Erro ao deletar contato:', error);
+      }
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleString('pt-BR');
   };
 
@@ -156,7 +262,8 @@ function PessoasJuridicas() {
               <div><strong>Razão Social:</strong> {visualizando.razao_social}</div>
               <div><strong>Nome Fantasia:</strong> {visualizando.nome_fantasia || '-'}</div>
               <div><strong>Sigla:</strong> {visualizando.sigla}</div>
-              <div><strong>CNPJ:</strong> {visualizando.cnpj}</div>
+              <div><strong>Tipo:</strong> {visualizando.tipo}</div>
+              <div><strong>CNPJ:</strong> {formatCnpj(visualizando.cnpj)}</div>
               <div><strong>Inscrição Estadual:</strong> {visualizando.inscricao_estadual || '-'}</div>
               <div><strong>Inscrição Municipal:</strong> {visualizando.inscricao_municipal || '-'}</div>
               <div><strong>Endereço:</strong> {visualizando.endereco || '-'}</div>
@@ -169,13 +276,47 @@ function PessoasJuridicas() {
               <div><strong>Última Alteração:</strong> {formatDate(visualizando.atualizado_em)}</div>
             </div>
             <button 
-              className="btn btn-primary" 
-              style={{ marginTop: '15px' }}
+              className="btn btn-secondary" 
+              style={{ marginTop: '20px' }}
               onClick={() => setVisualizando(null)}
             >
               <span style={{ marginRight: '8px' }}>✖</span>
               Fechar
             </button>
+
+            <div style={{ marginTop: '30px' }}>
+              <h4>Contatos Associados</h4>
+              <table className="table table-sm table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Departamento</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contatos.length > 0 ? (
+                    contatos.map(contato => (
+                      <tr key={contato.id}>
+                        <td>{contato.nome}</td>
+                        <td>{contato.departamento || '-'}</td>
+                        <td>{contato.email || '-'}</td>
+                        <td>
+                          <button className="btn btn-warning btn-sm" onClick={() => handleEditContato(contato.id)}>✏️ Editar</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteContato(contato.id)} style={{ marginLeft: '5px' }}>🗑️ Excluir</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="text-center">Nenhum contato encontrado para esta empresa.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         )}
 
@@ -185,28 +326,46 @@ function PessoasJuridicas() {
               <label>Razão Social: *</label>
               <input
                 type="text"
+                className="form-control"
                 value={formData.razao_social}
                 onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
                 required
               />
             </div>
-            <div className="form-group">
-              <label>Nome Fantasia:</label>
-              <input
-                type="text"
-                value={formData.nome_fantasia}
-                onChange={(e) => setFormData({ ...formData, nome_fantasia: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>Sigla: * (máx. 3 caracteres)</label>
-              <input
-                type="text"
-                value={formData.sigla}
-                onChange={(e) => setFormData({ ...formData, sigla: e.target.value.toUpperCase() })}
-                maxLength={3}
-                required
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '15px' }}>
+              <div className="form-group">
+                <label>Nome Fantasia:</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.nome_fantasia}
+                  onChange={(e) => setFormData({ ...formData, nome_fantasia: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Sigla: * (máx. 3 caracteres)</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.sigla}
+                  onChange={(e) => setFormData({ ...formData, sigla: e.target.value.toUpperCase() })}
+                  maxLength={3}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Tipo: *</label>
+                <select
+                  className="form-control"
+                  value={formData.tipo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  required
+                >
+                  <option value="Cliente">Cliente</option>
+                  <option value="Fornecedor">Fornecedor</option>
+                  <option value="Cliente/Fornecedor">Cliente/Fornecedor</option>
+                </select>
+              </div>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
@@ -214,15 +373,20 @@ function PessoasJuridicas() {
                 <label>CNPJ: *</label>
                 <input
                   type="text"
-                  value={formData.cnpj}
-                  onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                  className="form-control"
+                  value={formatCnpj(formData.cnpj)}
+                  onChange={handleCnpjChange}
                   required
+                  maxLength={18}
+                  placeholder="XX.XXX.XXX/XXXX-XX"
                 />
+                {cnpjError && <small className="form-text text-danger">{cnpjError}</small>}
               </div>
               <div className="form-group">
                 <label>Inscrição Estadual:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.inscricao_estadual}
                   onChange={(e) => setFormData({ ...formData, inscricao_estadual: e.target.value })}
                 />
@@ -231,6 +395,7 @@ function PessoasJuridicas() {
                 <label>Inscrição Municipal:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.inscricao_municipal}
                   onChange={(e) => setFormData({ ...formData, inscricao_municipal: e.target.value })}
                 />
@@ -241,6 +406,7 @@ function PessoasJuridicas() {
               <label>Endereço:</label>
               <input
                 type="text"
+                className="form-control"
                 value={formData.endereco}
                 onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
               />
@@ -249,6 +415,7 @@ function PessoasJuridicas() {
               <label>Complemento:</label>
               <input
                 type="text"
+                className="form-control"
                 value={formData.complemento}
                 onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
               />
@@ -259,6 +426,7 @@ function PessoasJuridicas() {
                 <label>Cidade:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.cidade}
                   onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
                 />
@@ -267,6 +435,7 @@ function PessoasJuridicas() {
                 <label>Estado:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.estado}
                   onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase() })}
                   maxLength={2}
@@ -276,6 +445,7 @@ function PessoasJuridicas() {
                 <label>CEP:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.cep}
                   onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
                 />
@@ -284,6 +454,7 @@ function PessoasJuridicas() {
                 <label>País:</label>
                 <input
                   type="text"
+                  className="form-control"
                   value={formData.pais}
                   onChange={(e) => setFormData({ ...formData, pais: e.target.value })}
                 />
@@ -297,30 +468,25 @@ function PessoasJuridicas() {
           </form>
         )}
 
-        {!visualizando && (
+        {!visualizando && !showForm && (
           <>
             <div style={{ marginTop: '20px', marginBottom: '15px' }}>
               <input
                 type="text"
+                className="form-control"
                 placeholder="🔍 Filtrar por Razão Social, Nome Fantasia ou CNPJ..."
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                }}
               />
             </div>
 
-            <table className="table">
+            <table className="table table-striped table-hover">
               <thead>
                 <tr>
                   <th>Razão Social</th>
                   <th>Nome Fantasia</th>
                   <th>Sigla</th>
+                  <th>Tipo</th>
                   <th>CNPJ</th>
                   <th>Cidade/Estado</th>
                   <th>Ações</th>
@@ -332,20 +498,18 @@ function PessoasJuridicas() {
                     <td>{pessoa.razao_social}</td>
                     <td>{pessoa.nome_fantasia || '-'}</td>
                     <td>{pessoa.sigla}</td>
-                    <td>{pessoa.cnpj}</td>
+                    <td>{pessoa.tipo}</td>
+                    <td>{formatCnpj(pessoa.cnpj)}</td>
                     <td>{pessoa.cidade}/{pessoa.estado}</td>
                     <td className="actions">
-                      <button className="btn btn-primary" onClick={() => handleView(pessoa)}>
-                        <span style={{ marginRight: '5px' }}>👁</span>
-                        Visualizar
+                      <button className="btn btn-primary" onClick={() => handleView(pessoa)} title="Visualizar">
+                        <span>👁</span>
                       </button>
-                      <button className="btn btn-primary" onClick={() => handleEdit(pessoa)}>
-                        <span style={{ marginRight: '5px' }}>✏️</span>
-                        Editar
+                      <button className="btn btn-primary" onClick={() => handleEdit(pessoa)} title="Editar">
+                        <span>✏️</span>
                       </button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(pessoa.id)}>
-                        <span style={{ marginRight: '5px' }}>🗑️</span>
-                        Deletar
+                      <button className="btn btn-danger" onClick={() => handleDelete(pessoa.id)} title="Deletar">
+                        <span>🗑️</span>
                       </button>
                     </td>
                   </tr>

@@ -5,6 +5,7 @@ export interface PessoaJuridica {
   razao_social: string;
   nome_fantasia?: string;
   sigla: string;
+  tipo: string;
   cnpj: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
@@ -22,6 +23,7 @@ export interface PessoaJuridicaCreate {
   razao_social: string;
   nome_fantasia?: string;
   sigla: string;
+  tipo: string;
   cnpj: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
