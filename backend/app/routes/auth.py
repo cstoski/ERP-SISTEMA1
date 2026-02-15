@@ -45,6 +45,33 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    print(f"[DEBUG] get_current_user chamado com token: {token[:50]}...")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"[DEBUG] Token decodificado com sucesso. Payload: {payload}")
+        username: str = payload.get("sub")
+        print(f"[DEBUG] Username extraído: {username}")
+        if username is None:
+            print("[DEBUG] Username é None, lançando exceção")
+            raise credentials_exception
+    except JWTError as e:
+        print(f"[DEBUG] Erro ao decodificar JWT: {e}")
+        raise credentials_exception
+    user = db.query(models.user.User).filter(models.user.User.username == username).first()
+    print(f"[DEBUG] Usuário encontrado: {user.username if user else None}")
+    if user is None:
+        print("[DEBUG] Usuário não encontrado no banco, lançando exceção")
+        raise credentials_exception
+    print(f"[DEBUG] Retornando usuário: {user.username}")
+    return user
+
+
 @router.post("/register", response_model=user_schemas.UserRead)
 def register(user_in: user_schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.user.User).filter(
@@ -83,25 +110,6 @@ def login_for_access_token(form_data: user_schemas.TokenRequest, db: Session = D
 
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = db.query(models.user.User).filter(models.user.User.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
 
 
 @router.get("/me", response_model=user_schemas.UserRead)

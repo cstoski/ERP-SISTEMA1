@@ -1915,3 +1915,28 @@ body, html, #root {
   border-color: #cbd5e1;
   color: #334155;
 }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.nested-card {
+  margin-bottom: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+}
+
+.empty-state {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+.fornecedor-actions {
+  display: flex;
+  align-items: flex-end;
+}

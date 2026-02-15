@@ -40,6 +40,19 @@ api.interceptors.response.use(
     const fullUrl = (error.config?.baseURL || '') + (error.config?.url || '');
     console.error('[API] Response Error:', error.response?.status, fullUrl);
     console.error('[API] Error data:', error.response?.data);
+    if (error.response?.status === 401) {
+      console.log('[API] ❌ 401 Unauthorized - Limpando localStorage e redirecionando...');
+      const currentPath = window.location.pathname;
+      console.log('[API] Caminho atual:', currentPath);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('user_role');
+      console.log('[API] localStorage limpo');
+      if (currentPath !== '/login') {
+        console.log('[API] Redirecionando para /login?expired=1');
+        window.location.href = '/login?expired=1';
+      }
+    }
     return Promise.reject(error);
   }
 );

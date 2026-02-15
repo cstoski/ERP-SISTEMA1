@@ -20,6 +20,8 @@ import ProjetoForm from './pages/ProjetoForm';
 import Faturamentos from './pages/Faturamentos';
 import FaturamentoForm from './pages/FaturamentoForm';
 import Cronogramas from './pages/Cronogramas';
+import ProdutosServicos from './pages/ProdutosServicos';
+import ProdutoServicoForm from './pages/ProdutoServicoForm';
 import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
 import NotFound from './pages/NotFound';
@@ -61,24 +63,174 @@ const AppContent: React.FC = () => {
                   </RequireAuth>
                 }
               />
-              <Route path="/pessoas-juridicas" element={<PessoasJuridicas />} />
-              <Route path="/pessoas-juridicas/nova" element={<PessoaJuridicaForm />} />
-              <Route path="/pessoas-juridicas/editar/:id" element={<PessoaJuridicaForm />} />
-              <Route path="/contatos" element={<Contatos />} />
-              <Route path="/contatos/novo" element={<ContatoForm />} />
-              <Route path="/contatos/editar/:id" element={<ContatoForm />} />
-              <Route path="/funcionarios" element={<Funcionarios />} />
-              <Route path="/funcionarios/novo" element={<FuncionarioForm />} />
-              <Route path="/funcionarios/editar/:id" element={<FuncionarioForm />} />
-              <Route path="/projetos" element={<Projetos />} />
-              <Route path="/projetos/novo" element={<ProjetoForm />} />
-              <Route path="/projetos/editar/:id" element={<ProjetoForm />} />
-              <Route path="/faturamentos" element={<Faturamentos />} />
-              <Route path="/faturamentos/novo" element={<FaturamentoForm />} />
-              <Route path="/faturamentos/editar/:id" element={<FaturamentoForm />} />
-              <Route path="/cronogramas" element={<Cronogramas />} />
-              <Route path="/alterar-senha" element={<AlterarSenha />} />
-              <Route path="/usuarios" element={<GerenciamentoUsuarios />} />
+              <Route
+                path="/pessoas-juridicas"
+                element={
+                  <RequireAuth>
+                    <PessoasJuridicas />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/pessoas-juridicas/nova"
+                element={
+                  <RequireAuth>
+                    <PessoaJuridicaForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/pessoas-juridicas/editar/:id"
+                element={
+                  <RequireAuth>
+                    <PessoaJuridicaForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/contatos"
+                element={
+                  <RequireAuth>
+                    <Contatos />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/contatos/novo"
+                element={
+                  <RequireAuth>
+                    <ContatoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/contatos/editar/:id"
+                element={
+                  <RequireAuth>
+                    <ContatoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/funcionarios"
+                element={
+                  <RequireAuth>
+                    <Funcionarios />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/funcionarios/novo"
+                element={
+                  <RequireAuth>
+                    <FuncionarioForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/funcionarios/editar/:id"
+                element={
+                  <RequireAuth>
+                    <FuncionarioForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/projetos"
+                element={
+                  <RequireAuth>
+                    <Projetos />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/projetos/novo"
+                element={
+                  <RequireAuth>
+                    <ProjetoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/projetos/editar/:id"
+                element={
+                  <RequireAuth>
+                    <ProjetoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/produtos-servicos"
+                element={
+                  <RequireAuth>
+                    <ProdutosServicos />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/produtos-servicos/novo"
+                element={
+                  <RequireAuth>
+                    <ProdutoServicoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/produtos-servicos/editar/:id"
+                element={
+                  <RequireAuth>
+                    <ProdutoServicoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/faturamentos"
+                element={
+                  <RequireAuth>
+                    <Faturamentos />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/faturamentos/novo"
+                element={
+                  <RequireAuth>
+                    <FaturamentoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/faturamentos/editar/:id"
+                element={
+                  <RequireAuth>
+                    <FaturamentoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/cronogramas"
+                element={
+                  <RequireAuth>
+                    <Cronogramas />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/alterar-senha"
+                element={
+                  <RequireAuth>
+                    <AlterarSenha />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/usuarios"
+                element={
+                  <RequireAuth>
+                    <GerenciamentoUsuarios />
+                  </RequireAuth>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

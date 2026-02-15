@@ -18,15 +18,22 @@ const authService = {
       
       const data = res.data;
       if (data?.access_token) {
+        console.log('[authService] Salvando token no localStorage...');
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('username', payload.username);
+        console.log('[authService] Token salvo. Verificando:', !!localStorage.getItem('access_token'));
         
         // Obter dados completos do usuário (incluindo role)
         try {
           const userRes = await api.get('/api/auth/me');
           const userData = userRes.data;
           localStorage.setItem('user_role', userData.role || 'user');
-          console.log('Role do usuário:', userData.role);
+          console.log('[authService] Role do usuário:', userData.role);
+          console.log('[authService] localStorage após login:', {
+            access_token: !!localStorage.getItem('access_token'),
+            username: localStorage.getItem('username'),
+            user_role: localStorage.getItem('user_role')
+          });
         } catch (err) {
           console.error('Erro ao obter dados do usuário:', err);
           localStorage.setItem('user_role', 'user');

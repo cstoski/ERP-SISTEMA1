@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import authService from '../../services/authService';
 import '../../styles/auth.css';
@@ -13,6 +13,22 @@ const Login: React.FC = () => {
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/';
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === '1') {
+      setError('Sessão expirada. Faça login novamente.');
+      params.delete('expired');
+      const search = params.toString();
+      navigate(
+        {
+          pathname: location.pathname,
+          search: search ? `?${search}` : '',
+        },
+        { replace: true }
+      );
+    }
+  }, [location.pathname, location.search, navigate]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -71,7 +87,16 @@ const Login: React.FC = () => {
         // ignore
       }
       
+      console.log('[Login] Preparando navegação...');
+      console.log('[Login] Rota destino (from):', from);
+      console.log('[Login] localStorage antes de navegar:', {
+        access_token: !!localStorage.getItem('access_token'),
+        username: localStorage.getItem('username'),
+        user_role: localStorage.getItem('user_role')
+      });
+      
       navigate(from, { replace: true });
+      console.log('[Login] navigate() executado');
     } catch (err: any) {
       setLoading(false);
       console.error('Erro ao fazer login:', err);
