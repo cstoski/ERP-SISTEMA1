@@ -1,6 +1,6 @@
 import { SyntheticEvent, useState } from 'react';
 import { IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
-import IconifyIcon from 'components/base/IconifyIcon';
+import IconifyIcon from '../base/IconifyIcon';
 
 const PasswordTextField = ({ ref, ...props }: TextFieldProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);

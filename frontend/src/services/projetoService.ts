@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 interface Projeto {
   id: number;
@@ -46,47 +46,47 @@ const API_URL = '/api/projetos';
 
 export const projetoService = {
   listarTodos: async (): Promise<Projeto[]> => {
-    const response = await axios.get(`${API_URL}/`);
+    const response = await api.get(`${API_URL}/`);
     return response.data;
   },
 
   obter: async (id: number): Promise<Projeto> => {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await api.get(`${API_URL}/${id}`);
     return response.data;
   },
 
   criar: async (projeto: ProjetoCreate): Promise<Projeto> => {
-    const response = await axios.post(`${API_URL}/`, projeto);
+    const response = await api.post(`${API_URL}/`, projeto);
     return response.data;
   },
 
   atualizar: async (id: number, projeto: ProjetoUpdate): Promise<Projeto> => {
-    const response = await axios.put(`${API_URL}/${id}`, projeto);
+    const response = await api.put(`${API_URL}/${id}`, projeto);
     return response.data;
   },
 
   deletar: async (id: number): Promise<Projeto> => {
-    const response = await axios.delete(`${API_URL}/${id}`);
+    const response = await api.delete(`${API_URL}/${id}`);
     return response.data;
   },
 
   obterProximoNumero: async (): Promise<{ numero: string }> => {
-    const response = await axios.get(`${API_URL}/proximo-numero`);
+    const response = await api.get(`${API_URL}/proximo-numero`);
     return response.data;
   },
 
   listarClientes: async (): Promise<any[]> => {
-    const response = await axios.get(`${API_URL}/clientes`);
+    const response = await api.get(`${API_URL}/clientes`);
     return response.data;
   },
 
   listarContatosCliente: async (clienteId: number): Promise<any[]> => {
-    const response = await axios.get(`${API_URL}/cliente/${clienteId}/contatos`);
+    const response = await api.get(`${API_URL}/cliente/${clienteId}/contatos`);
     return response.data;
   },
 
   exportarExcel: async (): Promise<Blob> => {
-    const response = await axios.get(`${API_URL}/export/excel`, {
+    const response = await api.get(`${API_URL}/export/excel`, {
       responseType: 'blob',
     });
     return response.data;
@@ -95,7 +95,7 @@ export const projetoService = {
   importarExcel: async (file: File): Promise<any> => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await axios.post(`${API_URL}/import/excel`, formData, {
+    const response = await api.post(`${API_URL}/import/excel`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

@@ -1,13 +1,7 @@
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
-import { useSettingsContext } from 'providers/SettingsProvider';
-import Image from 'components/base/Image';
 
 const SocialAuth = () => {
-  const {
-    config: { assetsDir },
-  } = useSettingsContext();
-
   return (
     <Grid
       container
@@ -29,7 +23,7 @@ const SocialAuth = () => {
           size="large"
           sx={{ flex: 1, whiteSpace: 'nowrap' }}
           startIcon={
-            <Image src={`${assetsDir}/images/logo/1.svg`} height={21} width={21} alt="icon" />
+            <img src="/assets/images/logo/1.svg" height={21} width={21} alt="icon" />
           }
         >
           Sign in with google
@@ -48,7 +42,7 @@ const SocialAuth = () => {
           size="large"
           sx={{ flex: 1, whiteSpace: 'nowrap' }}
           startIcon={
-            <Image src={`${assetsDir}/images/logo/2.svg`} height={21} width={21} alt="icon" />
+            <img src="/assets/images/logo/2.svg" height={21} width={21} alt="icon" />
           }
         >
           Sign in with Microsoft

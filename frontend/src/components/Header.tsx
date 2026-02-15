@@ -37,8 +37,18 @@ const Header: React.FC = () => {
       </div>
       <div className="header-right">
         <div className="user-info">
-          <span className="user-name">Cristiano Stoski</span>
-          <div className="user-avatar">CS</div>
+          <span className="user-name">{localStorage.getItem('username') || 'Usuário'}</span>
+          <div className="user-avatar">{(localStorage.getItem('username') || 'U').charAt(0).toUpperCase()}</div>
+          <button
+            className="btn-logout"
+            onClick={() => {
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('username');
+              window.location.href = '/login';
+            }}
+          >
+            Sair
+          </button>
         </div>
       </div>
     </header>

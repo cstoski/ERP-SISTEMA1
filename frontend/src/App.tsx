@@ -4,6 +4,9 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import Login from './pages/authentication/Login';
+import Signup from './pages/authentication/Signup';
+import RequireAuth from './components/RequireAuth';
 import PessoasJuridicas from './pages/PessoasJuridicas';
 import PessoaJuridicaForm from './pages/PessoaJuridicaForm';
 import Contatos from './pages/Contatos';
@@ -25,7 +28,16 @@ const App: React.FC = () => {
           <Header />
           <div className="page-content">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Home />
+                  </RequireAuth>
+                }
+              />
               <Route path="/pessoas-juridicas" element={<PessoasJuridicas />} />
               <Route path="/pessoas-juridicas/nova" element={<PessoaJuridicaForm />} />
               <Route path="/pessoas-juridicas/editar/:id" element={<PessoaJuridicaForm />} />

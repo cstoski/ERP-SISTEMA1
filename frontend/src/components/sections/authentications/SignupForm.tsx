@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router';
 import { Box, Button, Divider, Link, Stack, TextField, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import paths from 'routes/paths';
-import PasswordTextField from 'components/common/PasswordTextField';
+import PasswordTextField from '../../common/PasswordTextField';
 import SocialAuth from './SocialAuth';
 
 const SignupForm = () => {
@@ -54,7 +53,7 @@ const SignupForm = () => {
               }}
             >
               Already have an account?
-              <Link href={paths.login} sx={{ ml: 1 }}>
+              <Link href="/login" sx={{ ml: 1 }}>
                 Log in
               </Link>
             </Typography>
