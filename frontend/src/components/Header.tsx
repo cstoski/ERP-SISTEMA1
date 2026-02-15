@@ -7,8 +7,14 @@ const getPageTitle = (pathname: string): string => {
     case '/':
       return 'Dashboard';
     case '/pessoas-juridicas':
-      return 'Pessoas Jurídicas';
+      return 'Empresas';
+    case '/contatos':
+      return 'Contatos';
     default:
+      if (pathname.includes('pessoas-juridicas/nova')) return 'Nova Empresa';
+      if (pathname.includes('pessoas-juridicas/editar')) return 'Editar Empresa';
+      if (pathname.includes('contatos/novo')) return 'Novo Contato';
+      if (pathname.includes('contatos/editar')) return 'Editar Contato';
       return 'Página não encontrada';
   }
 };
@@ -16,13 +22,24 @@ const getPageTitle = (pathname: string): string => {
 const Header: React.FC = () => {
   const location = useLocation();
   const title = getPageTitle(location.pathname);
+  const currentDate = new Date().toLocaleDateString('pt-BR', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
   return (
     <header className="header">
-      <h1 className="header-title">{title}</h1>
-      <div className="header-user">
-        <span>Usuário</span>
-        <div className="user-avatar">U</div>
+      <div className="header-left">
+        <h1 className="header-title">{title}</h1>
+        <span className="header-date">{currentDate}</span>
+      </div>
+      <div className="header-right">
+        <div className="user-info">
+          <span className="user-name">Cristiano Stoski</span>
+          <div className="user-avatar">CS</div>
+        </div>
       </div>
     </header>
   );

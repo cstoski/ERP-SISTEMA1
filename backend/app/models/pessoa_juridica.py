@@ -23,3 +23,4 @@ class PessoaJuridica(Base):
     atualizado_em = Column(DateTime(timezone=True), onupdate=func.now())
 
     contatos = relationship("Contato", back_populates="pessoa_juridica", cascade="all, delete-orphan")
+    projetos = relationship("Projeto", back_populates="cliente", cascade="all, delete-orphan")

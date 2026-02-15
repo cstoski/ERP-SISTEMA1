@@ -58,16 +58,12 @@ const PessoaJuridicaForm: React.FC = () => {
     cnpj: '',
     inscricao_estadual: '',
     inscricao_municipal: '',
-    logradouro: '',
-    numero: '',
+    endereco: '',
     complemento: '',
-    bairro: '',
     cidade: '',
-    uf: '',
-    pais: 'Brasil', // Adicionado
+    estado: '',
+    pais: 'Brasil',
     cep: '',
-    telefone: '',
-    email: '',
     tipo: 'Cliente',
   });
   const [error, setError] = useState<string | null>(null);
@@ -265,13 +261,8 @@ const PessoaJuridicaForm: React.FC = () => {
 
             <div className="form-row">
               <div className="form-group" style={{ flex: 3 }}>
-                <label htmlFor="logradouro">Logradouro</label>
-                <input type="text" id="logradouro" name="logradouro" className="form-input" value={formData.logradouro} onChange={handleChange} />
-              </div>
-
-              <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="numero">Número</label>
-                <input type="text" id="numero" name="numero" className="form-input" value={formData.numero} onChange={handleChange} />
+                <label htmlFor="endereco">Endereço</label>
+                <input type="text" id="endereco" name="endereco" className="form-input" value={formData.endereco} onChange={handleChange} />
               </div>
 
               <div className="form-group" style={{ flex: 2 }}>
@@ -282,8 +273,12 @@ const PessoaJuridicaForm: React.FC = () => {
 
             <div className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
-                <label htmlFor="bairro">Bairro</label>
-                <input type="text" id="bairro" name="bairro" className="form-input" value={formData.bairro} onChange={handleChange} />
+                <label htmlFor="cidade">Cidade</label>
+                <input type="text" id="cidade" name="cidade" className="form-input" value={formData.cidade} onChange={handleChange} />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label htmlFor="estado">Estado</label>
+                <input type="text" id="estado" name="estado" className="form-input" value={formData.estado} onChange={handleChange} maxLength={2} />
               </div>
               <div className="form-group" style={{ flex: 1 }}>
                 <label htmlFor="cep">CEP</label>
@@ -291,31 +286,9 @@ const PessoaJuridicaForm: React.FC = () => {
                   {(inputProps: any) => <input {...inputProps} id="cep" className="form-input" />}
                 </InputMask>
               </div>
-              <div className="form-group" style={{ flex: 2 }}>
-                <label htmlFor="cidade">Cidade</label>
-                <input type="text" id="cidade" name="cidade" className="form-input" value={formData.cidade} onChange={handleChange} />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="uf">Estado</label>
-                <input type="text" id="uf" name="uf" className="form-input" value={formData.uf} onChange={handleChange} maxLength={2} />
-              </div>
               <div className="form-group" style={{ flex: 1 }}>
                 <label htmlFor="pais">País</label>
                 <input type="text" id="pais" name="pais" className="form-input" value={formData.pais} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="telefone">Telefone</label>
-                <InputMask mask="(99) 99999-9999" value={formData.telefone} onChange={handleChange} name="telefone">
-                  {(inputProps: any) => <input {...inputProps} id="telefone" className="form-input" />}
-                </InputMask>
-              </div>
-
-              <div className="form-group" style={{ flex: 2 }}>
-                <label htmlFor="email">Email</label>
-                <input type="email" id="email" name="email" className="form-input" value={formData.email} onChange={handleChange} />
               </div>
             </div>
 

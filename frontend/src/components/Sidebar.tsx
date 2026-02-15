@@ -8,14 +8,33 @@ const Sidebar: React.FC = () => {
       <nav>
         <ul>
           <li>
-            {/* O NavLink adiciona a classe 'active' automaticamente */}
             <NavLink to="/" end>
               Dashboard
             </NavLink>
           </li>
           <li>
             <NavLink to="/pessoas-juridicas">
-              Pessoas Jurídicas
+              Empresas
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/contatos">
+              Contatos
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/funcionarios">
+              Funcionários
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/projetos">
+              Projetos
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/faturamentos">
+              Faturamentos
             </NavLink>
           </li>
         </ul>

@@ -18,23 +18,16 @@ interface PessoaJuridica {
   sigla: string;
   cnpj: string;
   tipo: 'Cliente' | 'Fornecedor' | string;
-  // Endereço
-  logradouro?: string;
-  numero?: string;
+  endereco?: string;
   complemento?: string;
-  bairro?: string;
   cidade?: string;
-  uf?: string;
+  estado?: string;
   cep?: string;
-  // Contato Principal
-  telefone?: string;
-  email?: string;
-  // Inscrições
+  pais?: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
-  // Timestamps e Relações
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
   contatos: Contato[];
 }
 
@@ -102,12 +95,71 @@ const PessoasJuridicas: React.FC = () => {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const response = await axios.get('/api/pessoas-juridicas/export/excel', {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `pessoas_juridicas_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentElement?.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao exportar:', err);
+      alert('Erro ao exportar arquivo Excel');
+    }
+  };
+
+  const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post('/api/pessoas-juridicas/import/excel', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      alert(response.data.message);
+      if (response.data.erros && response.data.erros.length > 0) {
+        alert(`Erros encontrados:\n${response.data.erros.join('\n')}`);
+      }
+
+      // Recarregar dados
+      axios.get('/api/pessoas-juridicas')
+        .then(result => {
+          setPessoas(result.data);
+        })
+        .catch(err => console.error('Erro ao recarregar:', err));
+    } catch (err: any) {
+      console.error('Erro ao importar:', err);
+      const message = err.response?.data?.detail || 'Erro ao importar arquivo';
+      alert(message);
+    } finally {
+      // Limpar input
+      event.target.value = '';
+    }
+  };
+
   const filteredPessoas = pessoas.filter(p =>
     p.razao_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.nome_fantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.cnpj.includes(searchTerm) ||
     p.sigla.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calcular estatísticas
+  const totalCadastros = pessoas.length;
+  const totalClientes = pessoas.filter(p => p.tipo === 'Cliente').length;
+  const totalFornecedores = pessoas.filter(p => p.tipo === 'Fornecedor').length;
 
   if (loading) {
     return <div className="card-body">Carregando...</div>;
@@ -120,10 +172,39 @@ const PessoasJuridicas: React.FC = () => {
   return (
     <>
       <div className="page-header">
-        <h2>Pessoas Jurídicas</h2>
-        <button className="btn btn-primary" onClick={() => navigate('/pessoas-juridicas/nova')}>
-          Adicionar Nova
-        </button>
+        <h2>Empresas</h2>
+        <div className="header-actions">
+          <button className="btn btn-primary" onClick={() => navigate('/pessoas-juridicas/nova')}>
+            Adicionar Nova
+          </button>
+          <button className="btn btn-secondary" onClick={handleExportExcel}>
+            📥 Exportar Excel
+          </button>
+          <label className="btn btn-secondary" style={{ cursor: 'pointer', marginBottom: 0 }}>
+            📤 Importar Excel
+            <input 
+              type="file" 
+              accept=".xlsx,.xls" 
+              onChange={handleImportExcel}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-value">{totalCadastros}</div>
+          <div className="stat-label">Total de Cadastros</div>
+        </div>
+        <div className="stat-card stat-card-primary">
+          <div className="stat-value">{totalClientes}</div>
+          <div className="stat-label">Clientes</div>
+        </div>
+        <div className="stat-card stat-card-success">
+          <div className="stat-value">{totalFornecedores}</div>
+          <div className="stat-label">Fornecedores</div>
+        </div>
       </div>
 
       <div className="card">
@@ -157,7 +238,7 @@ const PessoasJuridicas: React.FC = () => {
                     <td>{pessoa.nome_fantasia}</td>
                     <td>{pessoa.sigla}</td>
                     <td>{formatCNPJ(pessoa.cnpj)}</td>
-                    <td>{pessoa.cidade && pessoa.uf ? `${pessoa.cidade}/${pessoa.uf}` : 'N/A'}</td>
+                    <td>{pessoa.cidade && pessoa.estado ? `${pessoa.cidade}/${pessoa.estado}` : 'N/A'}</td>
                     <td>
                       <span className={`badge ${pessoa.tipo === 'Cliente' ? 'badge-blue' : 'badge-green'}`}>
                         {pessoa.tipo}
@@ -187,13 +268,11 @@ const PessoasJuridicas: React.FC = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        title="Detalhes da Pessoa Jurídica"
+        title="Detalhes da Empresa"
       >
         {selectedPessoa && (
           <>
             <div className="details-grid">
-              <strong>ID:</strong>
-              <span>{selectedPessoa.id}</span>
               <strong>Razão Social:</strong>
               <span>{selectedPessoa.razao_social}</span>
               <strong>Nome Fantasia:</strong>
@@ -206,27 +285,25 @@ const PessoasJuridicas: React.FC = () => {
               <span>{selectedPessoa.inscricao_estadual || 'N/A'}</span>
               <strong>Inscrição Municipal:</strong>
               <span>{selectedPessoa.inscricao_municipal || 'N/A'}</span>
-              <strong>Email Principal:</strong>
-              <span>{selectedPessoa.email || 'N/A'}</span>
-              <strong>Telefone Principal:</strong>
-              <span>{selectedPessoa.telefone || 'N/A'}</span>
               <strong>Tipo:</strong>
               <span>{selectedPessoa.tipo}</span>
+              <strong>País:</strong>
+              <span>{selectedPessoa.pais || 'N/A'}</span>
             </div>
 
             <div className="details-section">
               <h4>Endereço</h4>
               <div className="details-grid">
-                <strong>Logradouro:</strong>
-                <span>{selectedPessoa.logradouro || 'N/A'}, {selectedPessoa.numero || 's/n'}</span>
+                <strong>Endereço:</strong>
+                <span>{selectedPessoa.endereco || 'N/A'}</span>
                 <strong>Complemento:</strong>
                 <span>{selectedPessoa.complemento || 'N/A'}</span>
-                <strong>Bairro:</strong>
-                <span>{selectedPessoa.bairro || 'N/A'}</span>
-                <strong>Cidade/UF:</strong>
-                <span>{selectedPessoa.cidade || 'N/A'} / {selectedPessoa.uf || 'N/A'}</span>
+                <strong>Cidade/Estado:</strong>
+                <span>{selectedPessoa.cidade || 'N/A'} / {selectedPessoa.estado || 'N/A'}</span>
                 <strong>CEP:</strong>
                 <span>{selectedPessoa.cep || 'N/A'}</span>
+                <strong>País:</strong>
+                <span>{selectedPessoa.pais || 'N/A'}</span>
               </div>
             </div>
 
@@ -251,9 +328,9 @@ const PessoasJuridicas: React.FC = () => {
               <h4>Histórico</h4>
               <div className="details-grid">
                 <strong>Data de Criação:</strong>
-                <span>{formatDateTime(selectedPessoa.created_at)}</span>
+                <span>{formatDateTime(selectedPessoa.criado_em)}</span>
                 <strong>Última Atualização:</strong>
-                <span>{formatDateTime(selectedPessoa.updated_at)}</span>
+                <span>{formatDateTime(selectedPessoa.atualizado_em)}</span>
               </div>
             </div>
           </>
