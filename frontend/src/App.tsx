@@ -1,34 +1,30 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './App.css'; // Importa os novos estilos
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Home from './pages/Home';
 import PessoasJuridicas from './pages/PessoasJuridicas';
-import Contatos from './pages/Contatos';
-import Menu from './pages/Menu';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import PessoaJuridicaForm from './pages/PessoaJuridicaForm'; // Importa a nova página
+import NotFound from './pages/NotFound';
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
-      <div className="app-container d-flex flex-column min-vh-100">
+      <Sidebar />
+      <main className="main-content">
         <Header />
-        <div className="sidebar">
-          <Menu />
+        <div className="page-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/pessoas-juridicas" element={<PessoasJuridicas />} />
+            <Route path="/pessoas-juridicas/nova" element={<PessoaJuridicaForm />} />
+            <Route path="/pessoas-juridicas/editar/:id" element={<PessoaJuridicaForm />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </div>
-        <main className="content-wrapper flex-grow-1 py-4">
-          <div className="container">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/pessoas-juridicas" element={<PessoasJuridicas />} />
-              <Route path="/contatos" element={<Contatos />} />
-            </Routes>
-          </div>
-        </main>
-        <Footer />
-      </div>
+      </main>
     </Router>
   );
-}
+};
 
 export default App;

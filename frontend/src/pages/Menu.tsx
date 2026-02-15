@@ -9,10 +9,10 @@ const Menu: React.FC = () => {
       </div>
       <ul className="sidebar-menu">
         <li>
-          <NavLink to="/pessoas-juridicas">Pessoas Jurídicas</NavLink>
+          <NavLink to="/pessoas-juridicas">EMPRESAS</NavLink>
         </li>
         <li>
-          <NavLink to="/contatos">Contatos</NavLink>
+          <NavLink to="/contatos">CONTATOS</NavLink>
         </li>
       </ul>
     </>

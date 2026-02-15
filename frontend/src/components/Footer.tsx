@@ -6,10 +6,10 @@ const Footer: React.FC = () => {
       <div className="container">
         <div className="row align-items-center">
           <div className="col-md-6">
-            <p className="mb-0">&copy; 2024 ERP Sistema. Todos os direitos reservados.</p>
+            <p className="mb-0">&copy; 2026 TAKT CONTROL AUTOMAÇÃO. Todos os direitos reservados.</p>
           </div>
           <div className="col-md-6 text-end">
-            <p className="mb-0"><small>Versão 1.0.0 | Desenvolvido por TAKT</small></p>
+            <p className="mb-0"><small>Versão 1.0.0 | Desenvolvido por Cristiano Stoski</small></p>
           </div>
         </div>
       </div>
