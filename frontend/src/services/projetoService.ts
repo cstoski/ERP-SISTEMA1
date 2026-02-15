@@ -102,6 +102,13 @@ export const projetoService = {
     });
     return response.data;
   },
+
+  exportarPdf: async (id: number): Promise<Blob> => {
+    const response = await api.get(`${API_URL}/${id}/export/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 export default projetoService;

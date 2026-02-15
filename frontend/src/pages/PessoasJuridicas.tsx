@@ -211,7 +211,7 @@ const PessoasJuridicas: React.FC = () => {
         <div className="card-header">
           <input
             type="text"
-            placeholder="Filtrar por razão social, nome fantasia, CNPJ ou sigla..."
+            placeholder="Filtrar por razão social ou CNPJ..."
             className="form-input filter-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -223,8 +223,6 @@ const PessoasJuridicas: React.FC = () => {
               <thead>
                 <tr>
                   <th>Razão Social</th>
-                  <th>Nome Fantasia</th>
-                  <th>Sigla</th>
                   <th>CNPJ</th>
                   <th>Cidade/UF</th>
                   <th>Tipo</th>
@@ -235,8 +233,6 @@ const PessoasJuridicas: React.FC = () => {
                 {filteredPessoas.map(pessoa => (
                   <tr key={pessoa.id}>
                     <td>{pessoa.razao_social}</td>
-                    <td>{pessoa.nome_fantasia}</td>
-                    <td>{pessoa.sigla}</td>
                     <td>{formatCNPJ(pessoa.cnpj)}</td>
                     <td>{pessoa.cidade && pessoa.estado ? `${pessoa.cidade}/${pessoa.estado}` : 'N/A'}</td>
                     <td>

@@ -97,7 +97,7 @@ body {
 
 .md-table thead th {
   position: relative;
-  padding: 0.75rem;
+  padding: 0.25rem 0.5rem;
   border-bottom: 1px solid var(--md-gray-300);
   background-color: var(--md-gray-100);
   color: var(--md-gray-700);
@@ -105,20 +105,20 @@ body {
   font-size: var(--md-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  line-height: 1.2;
-  height: 40px;
+  line-height: 1;
+  height: auto;
   vertical-align: middle;
   white-space: nowrap;
 }
 
 .md-table tbody td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   border-bottom: 1px solid var(--md-gray-200);
   background-color: var(--md-white);
   color: var(--md-gray-700);
   font-size: var(--md-font-size-base);
-  line-height: 1.4;
-  height: 48px;
+  line-height: 1;
+  height: auto;
   vertical-align: middle;
 }
 
@@ -413,17 +413,17 @@ body {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.75rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   white-space: nowrap;
-  line-height: 1.3;
+  line-height: 1;
 }
 
 .aurora-table tbody td {
-  padding: 0.75rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   vertical-align: middle;
   border-top: 1px solid var(--aurora-gray-200);
   border-bottom: 1px solid var(--aurora-gray-200);
-  line-height: 1.4;
+  line-height: 1;
 }
 
 .aurora-table tbody tr:hover {

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from typing import List
 from datetime import datetime
+import os
 from decimal import Decimal
 from io import BytesIO
 
@@ -11,9 +12,18 @@ from ..database import get_db
 from ..models.projeto import Projeto as ProjetoModel, StatusProjeto
 from ..models.pessoa_juridica import PessoaJuridica as PessoaJuridicaModel
 from ..models.contato import Contato as ContatoModel
+from ..models.faturamento import Faturamento as FaturamentoModel
+from ..models.user import User as UserModel
+from ..config import settings
 from ..schemas.projeto import Projeto, ProjetoCreate, ProjetoUpdate
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from .auth import get_current_user
 
 router = APIRouter()
 
@@ -184,6 +194,28 @@ def exportar_excel(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Erro ao exportar: {str(e)}")
 
 
+def _format_currency_br(value: Decimal) -> str:
+    try:
+        val = float(value)
+    except Exception:
+        val = 0.0
+    formatted = f"{val:,.2f}"
+    formatted = formatted.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {formatted}"
+
+
+def _format_date_br(value: datetime) -> str:
+    if not value:
+        return "N/A"
+    return value.strftime("%d/%m/%Y")
+
+
+def _format_datetime_br(value: datetime) -> str:
+    if not value:
+        return "N/A"
+    return value.strftime("%d/%m/%Y %H:%M")
+
+
 @router.post("/import/excel")
 async def importar_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Importar projetos de arquivo Excel"""
@@ -293,6 +325,212 @@ async def importar_excel(file: UploadFile = File(...), db: Session = Depends(get
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao importar arquivo: {str(e)}")
+
+
+@router.get("/{projeto_id}/export/pdf")
+def exportar_pdf(
+    projeto_id: int,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Exportar projeto em PDF"""
+    projeto = db.query(ProjetoModel).filter(ProjetoModel.id == projeto_id).first()
+    if not projeto:
+        raise HTTPException(status_code=404, detail="Projeto não encontrado")
+
+    cliente = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.id == projeto.cliente_id).first()
+    contato = db.query(ContatoModel).filter(ContatoModel.id == projeto.contato_id).first()
+
+    cliente_nome = "N/A"
+    if cliente:
+        cliente_nome = cliente.nome_fantasia or cliente.razao_social
+
+    contato_nome = contato.nome if contato else "N/A"
+    status_valor = getattr(projeto.status, "value", projeto.status)
+    faturamentos = db.query(FaturamentoModel).filter(FaturamentoModel.projeto_id == projeto.id).all()
+    total_faturado = sum([float(f.valor_faturado or 0) for f in faturamentos])
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=88, bottomMargin=52)
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    subtitle_style = ParagraphStyle(
+        name="Subtitle",
+        parent=styles["Heading2"],
+        fontSize=12,
+        textColor=colors.HexColor("#1f2937"),
+        spaceAfter=6,
+    )
+    label_style = ParagraphStyle(
+        name="Label",
+        parent=styles["BodyText"],
+        fontSize=9,
+        textColor=colors.HexColor("#6b7280"),
+    )
+
+    story = []
+    story.append(Paragraph(f"Relatorio do Projeto {projeto.numero}", title_style))
+    story.append(Spacer(1, 12))
+
+    def add_section(title: str):
+        story.append(Paragraph(title, subtitle_style))
+
+    def add_table(rows: list):
+        table = Table(rows, colWidths=[140, 360])
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#111827")),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fafafa")]),
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#e5e7eb")),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
+        story.append(table)
+        story.append(Spacer(1, 12))
+
+    add_section("Dados do Projeto")
+    add_table(
+        [
+            ["Campo", "Valor"],
+            ["Nome", projeto.nome or "N/A"],
+            ["Status", str(status_valor)],
+            ["Tecnico", projeto.tecnico or "N/A"],
+            ["Prazo (dias)", str(projeto.prazo_entrega_dias or "N/A")],
+            ["Data Pedido Compra", _format_date_br(projeto.data_pedido_compra)],
+        ]
+    )
+
+    add_section("Cliente")
+    add_table(
+        [
+            ["Campo", "Valor"],
+            ["Nome", cliente_nome],
+            ["CNPJ", cliente.cnpj if cliente else "N/A"],
+            ["Cidade/UF", f"{cliente.cidade}/{cliente.estado}" if cliente and cliente.cidade and cliente.estado else "N/A"],
+            ["Endereco", cliente.endereco if cliente else "N/A"],
+        ]
+    )
+
+    add_section("Contato")
+    contato_telefone = "N/A"
+    if contato:
+        contato_telefone = contato.celular or contato.telefone_fixo or "N/A"
+    add_table(
+        [
+            ["Campo", "Valor"],
+            ["Nome", contato_nome],
+            ["Email", contato.email if contato else "N/A"],
+            ["Telefone", contato_telefone],
+        ]
+    )
+
+    add_section("Valores")
+    add_table(
+        [
+            ["Campo", "Valor"],
+            ["Valor Orcado", _format_currency_br(projeto.valor_orcado or 0)],
+            ["Valor de Venda", _format_currency_br(projeto.valor_venda or 0)],
+            ["Total Faturado", _format_currency_br(Decimal(str(total_faturado)))],
+        ]
+    )
+
+    add_section("Historico")
+    add_table(
+        [
+            ["Campo", "Valor"],
+            ["Criado em", _format_datetime_br(projeto.criado_em)],
+            ["Atualizado em", _format_datetime_br(projeto.atualizado_em)],
+        ]
+    )
+
+    add_section("Faturamentos")
+    if faturamentos:
+        fat_rows = [["Data", "Tecnico", "Valor", "Observacoes"]]
+        for fat in faturamentos:
+            tecnico_nome = fat.tecnico.nome if fat.tecnico else "N/A"
+            fat_rows.append(
+                [
+                    _format_date_br(fat.data_faturamento),
+                    tecnico_nome,
+                    _format_currency_br(fat.valor_faturado or 0),
+                    fat.observacoes or "",
+                ]
+            )
+        fat_table = Table(fat_rows, colWidths=[80, 140, 90, 190])
+        fat_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e5e7eb")),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#e5e7eb")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ]
+            )
+        )
+        story.append(fat_table)
+    else:
+        story.append(Paragraph("Nenhum faturamento registrado para este projeto.", label_style))
+
+    def draw_header_footer(canvas_obj, doc_obj):
+        canvas_obj.saveState()
+
+        logo_path = settings.LOGO_PATH
+        if logo_path and os.path.exists(logo_path):
+            try:
+                logo = ImageReader(logo_path)
+                img_width, img_height = logo.getSize()
+                max_width = 160
+                max_height = 70
+                scale = min(1.0, max_width / img_width, max_height / img_height)
+                logo_width = img_width * scale
+                logo_height = img_height * scale
+                logo_x = 36
+                canvas_obj.drawImage(
+                    logo,
+                    logo_x,
+                    A4[1] - (logo_height + 20),
+                    width=logo_width,
+                    height=logo_height,
+                    mask='auto'
+                )
+            except Exception:
+                pass
+
+        canvas_obj.setFont("Helvetica", 8.5)
+        canvas_obj.setFillColor(colors.HexColor("#6b7280"))
+        page_number = canvas_obj.getPageNumber()
+        canvas_obj.drawRightString(A4[0] - 36, 24, f"Pagina {page_number}")
+        canvas_obj.drawString(
+            36,
+            24,
+            f"Gerado em: {_format_datetime_br(datetime.now())} | Usuario: {current_user.username}"
+        )
+
+        canvas_obj.restoreState()
+
+    doc.build(story, onFirstPage=draw_header_footer, onLaterPages=draw_header_footer)
+    buffer.seek(0)
+
+    filename = f"projeto_{projeto.numero}.pdf"
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 # Rotas com paths dinâmicos

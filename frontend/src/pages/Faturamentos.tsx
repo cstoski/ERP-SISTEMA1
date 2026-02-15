@@ -8,6 +8,9 @@ import projetoService from '../services/projetoService';
 interface Projeto { id: number; numero: string; nome: string }
 interface Funcionario { id: number; nome: string }
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
 const Faturamentos: React.FC = () => {
   const navigate = useNavigate();
   const [faturamentos, setFaturamentos] = useState<Faturamento[]>([]);
@@ -28,17 +31,24 @@ const Faturamentos: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('Carregando faturamentos...');
+      const token = localStorage.getItem('access_token');
+      console.log('Token presente:', !!token);
       const [fats, projs, tecs] = await Promise.all([
         faturamentoService.listarTodos(),
         projetoService.listarTodos(),
         funcionarioService.listarTecnicos(),
       ]);
+      console.log('Dados carregados:', { fats, projs, tecs });
       setFaturamentos(fats as Faturamento[]);
       setProjetos(projs.map((p: any) => ({ id: p.id, numero: p.numero, nome: p.nome })));
       setTecnicos(tecs as Funcionario[]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Falha ao carregar dados:", err);
-      setError("Não foi possível carregar os faturamentos. Tente novamente mais tarde.");
+      console.error('Erro status:', err?.response?.status);
+      console.error('Erro data:', err?.response?.data);
+      const errorMessage = err?.response?.data?.detail || "Não foi possível carregar os faturamentos. Tente novamente mais tarde.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,6 +82,12 @@ const Faturamentos: React.FC = () => {
     return tecnico ? tecnico.nome : 'N/A';
   };
 
+  const getTotalFaturadoProjeto = (projetoId: number) => {
+    return faturamentos
+      .filter(f => f.projeto_id === projetoId)
+      .reduce((sum, f) => sum + (Number(f.valor_faturado) || 0), 0);
+  };
+
   const filteredFaturamentos = faturamentos.filter(f => {
     const projeto = projetos.find(p => p.id === f.projeto_id);
     const tecnico = tecnicos.find(t => t.id === f.tecnico_id);
@@ -90,7 +106,31 @@ const Faturamentos: React.FC = () => {
   }
 
   if (error) {
-    return <div className="card-body error-message">{error}</div>;
+    return (
+      <>
+        <div className="page-header">
+          <h2>Faturamentos</h2>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="form-error-message">{error}</div>
+            <details style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Debug Info</summary>
+              <pre style={{ marginTop: '0.5rem', fontSize: '0.85rem', overflow: 'auto' }}>
+                Token: {localStorage.getItem('access_token')?.substring(0, 50)}...
+              </pre>
+            </details>
+            <button 
+              className="btn btn-primary" 
+              style={{ marginTop: '1rem' }}
+              onClick={() => loadData()}
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -130,19 +170,19 @@ const Faturamentos: React.FC = () => {
                   <tr key={f.id}>
                     <td>{getProjetoNome(f.projeto_id)}</td>
                     <td>{getTecnicoNome(f.tecnico_id)}</td>
-                    <td style={{ textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(f.valor_faturado) || 0)}</td>
+                    <td style={{ textAlign: 'right' }}>{formatCurrency(Number(f.valor_faturado) || 0)}</td>
                     <td>{f.data_faturamento ? new Date(f.data_faturamento).toLocaleDateString('pt-BR') : 'N/A'}</td>
                     <td>{f.observacoes}</td>
                     <td>
                       <div className="actions">
                         <button className="btn-action" title="Visualizar" onClick={() => { setSelectedFaturamento(f); setIsModalOpen(true); }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                         <button className="btn-action" title="Editar" onClick={() => navigate(`/faturamentos/editar/${f.id}`)}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-edit-2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                         </button>
                         <button className="btn-action" title="Excluir" onClick={() => openDeleteModal(f)}>
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                       </div>
                     </td>
@@ -154,12 +194,22 @@ const Faturamentos: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Detalhes do Faturamento">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={
+          selectedFaturamento
+            ? `Detalhes do Faturamento — Total do Projeto: ${formatCurrency(
+                getTotalFaturadoProjeto(selectedFaturamento.projeto_id)
+              )}`
+            : 'Detalhes do Faturamento'
+        }
+      >
         {selectedFaturamento && (
           <div className="details-grid">
             <strong>Projeto:</strong><span>{getProjetoNome(selectedFaturamento.projeto_id)}</span>
             <strong>Técnico:</strong><span>{getTecnicoNome(selectedFaturamento.tecnico_id)}</span>
-            <strong>Valor Faturado:</strong><span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(selectedFaturamento.valor_faturado) || 0)}</span>
+            <strong>Valor Faturado:</strong><span>{formatCurrency(Number(selectedFaturamento.valor_faturado) || 0)}</span>
             <strong>Data do Faturamento:</strong><span>{selectedFaturamento.data_faturamento ? new Date(selectedFaturamento.data_faturamento).toLocaleDateString('pt-BR') : 'N/A'}</span>
             <strong>Observações:</strong><span>{selectedFaturamento.observacoes || 'Nenhuma'}</span>
             <strong>Criado em:</strong><span>{new Date(selectedFaturamento.criado_em!).toLocaleString('pt-BR')}</span>

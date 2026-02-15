@@ -190,7 +190,7 @@ const ContatosPage: React.FC = () => {
         <div className="card-header">
           <input
             type="text"
-            placeholder="Filtrar por nome, email, departamento ou empresa..."
+            placeholder="Filtrar por nome, email ou empresa..."
             className="form-input filter-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -198,12 +198,11 @@ const ContatosPage: React.FC = () => {
         </div>
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table">
+            <table className="table table-compact">
               <thead>
                 <tr>
                   <th>Nome</th>
                   <th>Empresa</th>
-                  <th>Departamento</th>
                   <th>Email</th>
                   <th>Telefone</th>
                   <th>Ações</th>
@@ -214,7 +213,6 @@ const ContatosPage: React.FC = () => {
                   <tr key={contato.id}>
                     <td>{contato.nome}</td>
                     <td>{getNomeEmpresa(contato.pessoa_juridica_id)}</td>
-                    <td>{contato.departamento || '-'}</td>
                     <td>{contato.email || '-'}</td>
                     <td>{contato.celular || contato.telefone_fixo || '-'}</td>
                     <td>

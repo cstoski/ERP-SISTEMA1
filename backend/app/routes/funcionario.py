@@ -187,7 +187,9 @@ def criar_funcionario(funcionario: FuncionarioCreate, db: Session = Depends(get_
 
 @router.get("/", response_model=List[Funcionario])
 def ler_todos_funcionarios(db: Session = Depends(get_db)):
+    print("DEBUG: GET /funcionarios/ foi chamado")
     funcionarios = db.query(FuncionarioModel).all()
+    print(f"DEBUG: Retornando {len(funcionarios)} funcionários")
     return funcionarios
 
 

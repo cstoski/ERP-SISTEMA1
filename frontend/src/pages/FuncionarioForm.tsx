@@ -83,10 +83,8 @@ const FuncionarioForm: React.FC = () => {
       setLoading(true);
       if (isEditMode && id) {
         await funcionarioService.atualizar(parseInt(id), formData);
-        alert('Funcionário atualizado com sucesso!');
       } else {
         await funcionarioService.criar(formData);
-        alert('Funcionário criado com sucesso!');
       }
       navigate('/funcionarios');
     } catch (err: any) {

@@ -42,12 +42,19 @@ const Funcionarios: React.FC = () => {
   const carregarDados = async () => {
     try {
       setLoading(true);
-      const data = await funcionarioService.listarTodos();
-      setFuncionarios(data);
       setError(null);
-    } catch (err) {
+      console.log('Carregando funcionários...');
+      const token = localStorage.getItem('access_token');
+      console.log('Token presente:', !!token);
+      const data = await funcionarioService.listarTodos();
+      console.log('Dados carregados:', data);
+      setFuncionarios(data);
+    } catch (err: any) {
       console.error('Falha ao buscar dados:', err);
-      setError('Não foi possível carregar os dados dos funcionários.');
+      console.error('Erro status:', err?.response?.status);
+      console.error('Erro data:', err?.response?.data);
+      const errorMessage = err?.response?.data?.detail || 'Não foi possível carregar os dados dos funcionários.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -124,7 +131,39 @@ const Funcionarios: React.FC = () => {
   }
 
   if (error) {
-    return <div className="card-body error-message">{error}</div>;
+    return (
+      <>
+        <div className="page-header">
+          <h2>Funcionários</h2>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="form-error-message">{error}</div>
+            <details style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Debug Info</summary>
+              <pre style={{ marginTop: '0.5rem', fontSize: '0.85rem', overflow: 'auto' }}>
+                Token: {localStorage.getItem('access_token')?.substring(0, 50)}...
+                {'\nLocalStorage:'}
+                {JSON.stringify(
+                  Object.fromEntries(
+                    Object.entries(localStorage).filter(([k]) => k.includes('access'))
+                  ),
+                  null,
+                  2
+                )}
+              </pre>
+            </details>
+            <button 
+              className="btn btn-primary" 
+              style={{ marginTop: '1rem' }}
+              onClick={() => carregarDados()}
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (

@@ -86,16 +86,24 @@ const Projetos: React.FC = () => {
   const carregarDados = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Carregando projetos...');
+      const token = localStorage.getItem('access_token');
+      console.log('Token presente:', !!token);
       const [projetosData, clientesData] = await Promise.all([
         projetoService.listarTodos(),
         projetoService.listarClientes(),
       ]);
+      console.log('Projetos carregados:', projetosData);
+      console.log('Clientes carregados:', clientesData);
       setProjetos(projetosData);
       setClientes(clientesData);
-      setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Falha ao buscar dados:', err);
-      setError('Não foi possível carregar os dados dos projetos.');
+      console.error('Erro status:', err?.response?.status);
+      console.error('Erro data:', err?.response?.data);
+      const errorMessage = err?.response?.data?.detail || 'Não foi possível carregar os dados dos projetos.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -103,7 +111,8 @@ const Projetos: React.FC = () => {
 
   const getNomeCliente = (clienteId: number) => {
     const cliente = clientes.find(c => c.id === clienteId);
-    return cliente ? cliente.razao_social : 'N/A';
+    if (!cliente) return 'N/A';
+    return cliente.nome_fantasia || cliente.razao_social;
   };
 
   const handleView = (projeto: Projeto) => {
@@ -141,6 +150,22 @@ const Projetos: React.FC = () => {
         console.error('Falha ao excluir:', err);
         alert('Não foi possível excluir o projeto.');
       }
+    }
+  };
+
+  const handleExportPdf = async (projeto: Projeto) => {
+    try {
+      const blob = await projetoService.exportarPdf(projeto.id);
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `projeto_${projeto.numero}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentElement?.removeChild(link);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      alert('Erro ao gerar PDF do projeto');
     }
   };
 
@@ -209,7 +234,31 @@ const Projetos: React.FC = () => {
   }
 
   if (error) {
-    return <div className="card-body error-message">{error}</div>;
+    return (
+      <>
+        <div className="page-header">
+          <h2>Projetos</h2>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="form-error-message">{error}</div>
+            <details style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Debug Info</summary>
+              <pre style={{ marginTop: '0.5rem', fontSize: '0.85rem', overflow: 'auto' }}>
+                Token: {localStorage.getItem('access_token')?.substring(0, 50)}...
+              </pre>
+            </details>
+            <button 
+              className="btn btn-primary" 
+              style={{ marginTop: '1rem' }}
+              onClick={() => carregarDados()}
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -303,7 +352,7 @@ const Projetos: React.FC = () => {
                   <th>Cliente</th>
                   <th>Nome</th>
                   <th>Técnico</th>
-                  <th>Valor de Venda</th>
+                  <th>Valor Orçado</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -312,10 +361,10 @@ const Projetos: React.FC = () => {
                 {filteredProjetos.map(projeto => (
                   <tr key={projeto.id}>
                     <td><strong>{projeto.numero}</strong></td>
-                    <td>{projeto.nome}</td>
                     <td>{getNomeCliente(projeto.cliente_id)}</td>
+                    <td>{projeto.nome}</td>
                     <td>{projeto.tecnico}</td>
-                    <td>{formatCurrency(projeto.valor_venda)}</td>
+                    <td>{formatCurrency(projeto.valor_orcado)}</td>
                     <td>
                       <span className={`badge ${
                         projeto.status === 'Concluído' ? 'badge-success' : 
@@ -333,6 +382,9 @@ const Projetos: React.FC = () => {
                         </button>
                         <button className="btn-action" title="Editar" onClick={() => handleEdit(projeto.id)}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                        </button>
+                        <button className="btn-action" title="Gerar PDF" onClick={() => handleExportPdf(projeto)}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>
                         </button>
                         <button className="btn-action" title="Excluir" onClick={() => handleDelete(projeto)}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>

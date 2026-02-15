@@ -36,9 +36,9 @@ export interface PessoaJuridicaCreate {
 }
 
 export const pessoaJuridicaService = {
-  listar: () => api.get<PessoaJuridica[]>('/pessoas-juridicas'),
-  obter: (id: number) => api.get<PessoaJuridica>(`/pessoas-juridicas/${id}`),
-  criar: (data: PessoaJuridicaCreate) => api.post<PessoaJuridica>('/pessoas-juridicas', data),
-  atualizar: (id: number, data: Partial<PessoaJuridicaCreate>) => api.put<PessoaJuridica>(`/pessoas-juridicas/${id}`, data),
-  deletar: (id: number) => api.delete(`/pessoas-juridicas/${id}`),
+  listar: () => api.get<PessoaJuridica[]>('/api/pessoas-juridicas'),
+  obter: (id: number) => api.get<PessoaJuridica>(`/api/pessoas-juridicas/${id}`),
+  criar: (data: PessoaJuridicaCreate) => api.post<PessoaJuridica>('/api/pessoas-juridicas', data),
+  atualizar: (id: number, data: Partial<PessoaJuridicaCreate>) => api.put<PessoaJuridica>(`/api/pessoas-juridicas/${id}`, data),
+  deletar: (id: number) => api.delete(`/api/pessoas-juridicas/${id}`),
 };

@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from .database import engine, Base
 from .routes import pessoa_juridica, contato, projeto, funcionario, faturamento, auth
 from fastapi import Depends
+
+load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 

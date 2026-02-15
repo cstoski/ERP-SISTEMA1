@@ -14,64 +14,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.post("/", response_model=Faturamento)
-def criar_faturamento(fat: FaturamentoCreate, db: Session = Depends(get_db)):
-    # Validate project exists
-    projeto = db.query(ProjetoModel).filter(ProjetoModel.id == fat.projeto_id).first()
-    if not projeto:
-        raise HTTPException(status_code=404, detail="Projeto não encontrado")
-    funcionario = db.query(FuncionarioModel).filter(FuncionarioModel.id == fat.tecnico_id).first()
-    if not funcionario:
-        raise HTTPException(status_code=404, detail="Funcionário (técnico) não encontrado")
-
-    novo = FaturamentoModel(
-        projeto_id=fat.projeto_id,
-        tecnico_id=fat.tecnico_id,
-        valor_faturado=fat.valor_faturado,
-        data_faturamento=fat.data_faturamento,
-        observacoes=fat.observacoes
-    )
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-@router.get("/", response_model=List[Faturamento])
-def listar_faturamentos(db: Session = Depends(get_db)):
-    return db.query(FaturamentoModel).all()
-
-@router.get("/projeto/{projeto_id}", response_model=List[Faturamento])
-def listar_por_projeto(projeto_id: int, db: Session = Depends(get_db)):
-    return db.query(FaturamentoModel).filter(FaturamentoModel.projeto_id == projeto_id).all()
-
-@router.get("/{id}", response_model=Faturamento)
-def obter_faturamento(id: int, db: Session = Depends(get_db)):
-    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
-    if not fat:
-        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
-    return fat
-
-@router.put("/{id}", response_model=Faturamento)
-def atualizar_faturamento(id: int, fat_update: FaturamentoUpdate, db: Session = Depends(get_db)):
-    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
-    if not fat:
-        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
-    for key, value in fat_update.dict(exclude_unset=True).items():
-        setattr(fat, key, value)
-    db.add(fat)
-    db.commit()
-    db.refresh(fat)
-    return fat
-
-@router.delete("/{id}")
-def deletar_faturamento(id: int, db: Session = Depends(get_db)):
-    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
-    if not fat:
-        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
-    db.delete(fat)
-    db.commit()
-    return {"message": "Faturamento deletado"}
-
+# Rotas específicas PRIMEIRO (antes das genéricas com {id})
 
 @router.get("/export/excel")
 def exportar_excel(db: Session = Depends(get_db)):
@@ -157,21 +100,23 @@ async def importar_excel(file: UploadFile = File(...), db: Session = Depends(get
                     erros.append(f"Linha {idx}: Projeto ID ausente")
                     continue
 
+                if not tecnico_id:
+                    erros.append(f"Linha {idx}: Técnico ID ausente (obrigatório)")
+                    continue
+
                 projeto = db.query(ProjetoModel).filter(ProjetoModel.id == int(projeto_id)).first()
                 if not projeto:
                     erros.append(f"Linha {idx}: Projeto {projeto_id} não encontrado")
                     continue
 
-                # tecnico optional validation
-                if tecnico_id:
-                    func = db.query(FuncionarioModel).filter(FuncionarioModel.id == int(tecnico_id)).first()
-                    if not func:
-                        erros.append(f"Linha {idx}: Técnico {tecnico_id} não encontrado")
-                        continue
+                func = db.query(FuncionarioModel).filter(FuncionarioModel.id == int(tecnico_id)).first()
+                if not func:
+                    erros.append(f"Linha {idx}: Técnico {tecnico_id} não encontrado")
+                    continue
 
                 novo = FaturamentoModel(
                     projeto_id=int(projeto_id),
-                    tecnico_id=int(tecnico_id) if tecnico_id else None,
+                    tecnico_id=int(tecnico_id),
                     valor_faturado=float(valor),
                     data_faturamento=data_fat if isinstance(data_fat, datetime) else None,
                     observacoes=str(obs) if obs else None
@@ -186,3 +131,65 @@ async def importar_excel(file: UploadFile = File(...), db: Session = Depends(get
         return {"mensagem": f"Importação concluída. Inseridos: {inseridos}", "erros": erros}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao importar: {str(e)}")
+
+
+@router.get("/projeto/{projeto_id}", response_model=List[Faturamento])
+def listar_por_projeto(projeto_id: int, db: Session = Depends(get_db)):
+    return db.query(FaturamentoModel).filter(FaturamentoModel.projeto_id == projeto_id).all()
+
+
+# Rotas genéricas (com {id}) DEPOIS
+
+@router.post("/", response_model=Faturamento)
+def criar_faturamento(fat: FaturamentoCreate, db: Session = Depends(get_db)):
+    # Validate project exists
+    projeto = db.query(ProjetoModel).filter(ProjetoModel.id == fat.projeto_id).first()
+    if not projeto:
+        raise HTTPException(status_code=404, detail="Projeto não encontrado")
+    funcionario = db.query(FuncionarioModel).filter(FuncionarioModel.id == fat.tecnico_id).first()
+    if not funcionario:
+        raise HTTPException(status_code=404, detail="Funcionário (técnico) não encontrado")
+
+    novo = FaturamentoModel(
+        projeto_id=fat.projeto_id,
+        tecnico_id=fat.tecnico_id,
+        valor_faturado=fat.valor_faturado,
+        data_faturamento=fat.data_faturamento,
+        observacoes=fat.observacoes
+    )
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+    return novo
+
+@router.get("/", response_model=List[Faturamento])
+def listar_faturamentos(db: Session = Depends(get_db)):
+    return db.query(FaturamentoModel).all()
+
+@router.get("/{id}", response_model=Faturamento)
+def obter_faturamento(id: int, db: Session = Depends(get_db)):
+    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
+    if not fat:
+        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
+    return fat
+
+@router.put("/{id}", response_model=Faturamento)
+def atualizar_faturamento(id: int, fat_update: FaturamentoUpdate, db: Session = Depends(get_db)):
+    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
+    if not fat:
+        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
+    for key, value in fat_update.dict(exclude_unset=True).items():
+        setattr(fat, key, value)
+    db.add(fat)
+    db.commit()
+    db.refresh(fat)
+    return fat
+
+@router.delete("/{id}")
+def deletar_faturamento(id: int, db: Session = Depends(get_db)):
+    fat = db.query(FaturamentoModel).filter(FaturamentoModel.id == id).first()
+    if not fat:
+        raise HTTPException(status_code=404, detail="Faturamento não encontrado")
+    db.delete(fat)
+    db.commit()
+    return {"message": "Faturamento deletado"}
