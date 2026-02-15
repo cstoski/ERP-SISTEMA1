@@ -17,6 +17,7 @@ const getPageTitle = (pathname: string): string => {
   if (pathname === '/reset-senha') return 'Reset de Senha';
   if (pathname === '/login') return 'Login';
   if (pathname === '/signup') return 'Cadastro';
+  if (pathname === '/cronogramas') return 'Cronogramas';
 
   for (const entity of entities) {
     if (pathname === entity.prefix) return entity.plural;

@@ -4,6 +4,7 @@ from datetime import datetime
 import enum
 
 from ..database import Base
+from ..config import get_local_now
 
 class StatusProjeto(str, enum.Enum):
     ORCANDO = "Orçando"
@@ -28,8 +29,8 @@ class Projeto(Base):
     prazo_entrega_dias = Column(Integer, default=0)
     data_pedido_compra = Column(DateTime, nullable=True)
     status = Column(SQLEnum(StatusProjeto), default=StatusProjeto.ORCANDO)
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    criado_em = Column(DateTime, default=get_local_now)
+    atualizado_em = Column(DateTime, default=get_local_now, onupdate=get_local_now)
 
     # Relacionamentos
     cliente = relationship("PessoaJuridica", back_populates="projetos")

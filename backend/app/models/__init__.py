@@ -4,4 +4,5 @@ from .projeto import *
 from .funcionario import *
 from .faturamento import *
 from .user import *
+from .cronograma import *
 

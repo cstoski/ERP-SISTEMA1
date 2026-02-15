@@ -1,5 +1,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from datetime import datetime
+import pytz
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./erp.db"
@@ -19,3 +21,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
+
+# Função para obter horário local do Brasil
+def get_local_now():
+    """Retorna a data e hora atual no fuso horário de Brasília (America/Sao_Paulo)"""
+    tz = pytz.timezone('America/Sao_Paulo')
+    return datetime.now(tz).replace(tzinfo=None)  # Remove timezone info para compatibilidade com SQLite

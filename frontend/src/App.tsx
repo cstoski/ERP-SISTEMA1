@@ -19,6 +19,7 @@ import Projetos from './pages/Projetos';
 import ProjetoForm from './pages/ProjetoForm';
 import Faturamentos from './pages/Faturamentos';
 import FaturamentoForm from './pages/FaturamentoForm';
+import Cronogramas from './pages/Cronogramas';
 import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
 import NotFound from './pages/NotFound';
@@ -75,6 +76,7 @@ const AppContent: React.FC = () => {
               <Route path="/faturamentos" element={<Faturamentos />} />
               <Route path="/faturamentos/novo" element={<FaturamentoForm />} />
               <Route path="/faturamentos/editar/:id" element={<FaturamentoForm />} />
+              <Route path="/cronogramas" element={<Cronogramas />} />
               <Route path="/alterar-senha" element={<AlterarSenha />} />
               <Route path="/usuarios" element={<GerenciamentoUsuarios />} />
               <Route path="*" element={<NotFound />} />

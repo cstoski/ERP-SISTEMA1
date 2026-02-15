@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import projetoService from '../services/projetoService';
 import funcionarioService from '../services/funcionarioService';
-import InputMask from 'react-input-mask';
 
 interface Cliente {
   id: number;
@@ -61,15 +60,22 @@ const ProjetoForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Gerar data padrão para novo projeto
-  const getDataPadrao = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  // Converter ISO para formato yyyy-MM-dd (input date)
+  const formatDataPedidoCompra = (isoValue?: string): string => {
+    if (!isoValue) return '';
+    const parsed = new Date(isoValue);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Converter yyyy-MM-dd para ISO datetime (para enviar ao backend)
+  const normalizeDataPedidoCompra = (value?: string): string | undefined => {
+    if (!value || value === '') return undefined;
+    // value já está no formato yyyy-MM-dd do input date
+    return `${value}T00:00:00`;
   };
 
   const [formData, setFormData] = useState<Projeto>({
@@ -81,7 +87,7 @@ const ProjetoForm: React.FC = () => {
     valor_orcado: 0,
     valor_venda: 0,
     prazo_entrega_dias: 0,
-    data_pedido_compra: !isEditMode ? getDataPadrao() : '',
+    data_pedido_compra: '',
     status: 'Orçando',
   });
 
@@ -144,7 +150,10 @@ const ProjetoForm: React.FC = () => {
     try {
       setLoading(true);
       const projeto = await projetoService.obter(parseInt(id));
-      setFormData(projeto);
+      setFormData({
+        ...projeto,
+        data_pedido_compra: formatDataPedidoCompra(projeto.data_pedido_compra),
+      });
     } catch (err) {
       console.error('Erro ao carregar projeto:', err);
       alert('Erro ao carregar projeto');
@@ -163,6 +172,23 @@ const ProjetoForm: React.FC = () => {
     if (!formData.contato_id) newErrors.contato_id = 'Contato é obrigatório';
     if (!formData.tecnico.trim()) newErrors.tecnico = 'Técnico é obrigatório';
     if (!formData.status) newErrors.status = 'Status é obrigatório';
+
+    if (isEditMode && formData.status === 'Em Execução') {
+      if (!formData.valor_orcado || formData.valor_orcado <= 0) {
+        newErrors.valor_orcado = 'Valor Orçado é obrigatório e deve ser maior que zero';
+      }
+      if (!formData.valor_venda || formData.valor_venda <= 0) {
+        newErrors.valor_venda = 'Valor de Venda é obrigatório e deve ser maior que zero';
+      }
+      if (!formData.prazo_entrega_dias || formData.prazo_entrega_dias <= 0) {
+        newErrors.prazo_entrega_dias = 'Prazo de Entrega é obrigatório e deve ser maior que zero';
+      }
+      if (!formData.data_pedido_compra) {
+        newErrors.data_pedido_compra = 'Data do Pedido de Compra é obrigatória';
+      }
+    }
+    
+    // Data do pedido de compra é opcional, validação básica é feita pelo input date
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -199,12 +225,29 @@ const ProjetoForm: React.FC = () => {
 
     try {
       setLoading(true);
+      
+      // Enviar apenas campos válidos, excluindo metadados
+      const payload: any = {
+        numero: formData.numero,
+        cliente_id: formData.cliente_id,
+        nome: formData.nome,
+        contato_id: formData.contato_id,
+        tecnico: formData.tecnico,
+        valor_orcado: formData.valor_orcado,
+        valor_venda: formData.valor_venda,
+        prazo_entrega_dias: formData.prazo_entrega_dias,
+        status: formData.status,
+      };
+      
+      const dataNormalizada = normalizeDataPedidoCompra(formData.data_pedido_compra);
+      if (dataNormalizada) {
+        payload.data_pedido_compra = dataNormalizada;
+      }
+
       if (isEditMode && id) {
-        await projetoService.atualizar(parseInt(id), formData);
-        alert('Projeto atualizado com sucesso!');
+        await projetoService.atualizar(parseInt(id), payload);
       } else {
-        await projetoService.criar(formData);
-        alert('Projeto criado com sucesso!');
+        await projetoService.criar(payload);
       }
       navigate('/projetos');
     } catch (err: any) {
@@ -225,6 +268,16 @@ const ProjetoForm: React.FC = () => {
       <div className="card">
         <div className="card-body">
           <form onSubmit={handleSubmit}>
+            {isEditMode && formData.status === 'Em Execução' &&
+              (errors.valor_orcado ||
+                errors.valor_venda ||
+                errors.prazo_entrega_dias ||
+                errors.data_pedido_compra) && (
+                <div className="alert alert-warning">
+                  Para salvar em "Em Execução", informe Valor Orçado, Valor de Venda,
+                  Prazo de Entrega e Data do Pedido de Compra.
+                </div>
+              )}
             <div className="form-grid">
               <div className="form-group">
                 <label>Número do Projeto *</label>
@@ -340,56 +393,76 @@ const ProjetoForm: React.FC = () => {
 
             <div className="form-grid">
               <div className="form-group">
-                <label>Valor Orçado (R$)</label>
+                <label>
+                  Valor Orçado (R$)
+                  {isEditMode && formData.status === 'Em Execução' && ' *'}
+                </label>
                 <input
                   type="number"
                   name="valor_orcado"
                   placeholder="0,00"
-                  className="form-input"
+                  className={`form-input ${errors.valor_orcado ? 'input-error' : ''}`}
                   value={formData.valor_orcado}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
                 />
+                {errors.valor_orcado && <span className="error-message">{errors.valor_orcado}</span>}
               </div>
 
               <div className="form-group">
-                <label>Valor de Venda (R$)</label>
+                <label>
+                  Valor de Venda (R$)
+                  {isEditMode && formData.status === 'Em Execução' && ' *'}
+                </label>
                 <input
                   type="number"
                   name="valor_venda"
                   placeholder="0,00"
-                  className="form-input"
+                  className={`form-input ${errors.valor_venda ? 'input-error' : ''}`}
                   value={formData.valor_venda}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
                 />
+                {errors.valor_venda && <span className="error-message">{errors.valor_venda}</span>}
               </div>
 
               <div className="form-group">
-                <label>Prazo de Entrega (dias)</label>
+                <label>
+                  Prazo de Entrega (dias)
+                  {isEditMode && formData.status === 'Em Execução' && ' *'}
+                </label>
                 <input
                   type="number"
                   name="prazo_entrega_dias"
                   placeholder="0"
-                  className="form-input"
+                  className={`form-input ${errors.prazo_entrega_dias ? 'input-error' : ''}`}
                   value={formData.prazo_entrega_dias}
                   onChange={handleChange}
                   min="0"
                 />
+                {errors.prazo_entrega_dias && (
+                  <span className="error-message">{errors.prazo_entrega_dias}</span>
+                )}
               </div>
             </div>
 
             <div className="form-group">
-              <label>Data do Pedido de Compra</label>
+              <label>
+                Data do Pedido de Compra
+                {isEditMode && formData.status === 'Em Execução' && ' *'}
+              </label>
               <input
-                type="datetime-local"
+                type="date"
                 name="data_pedido_compra"
-                className="form-input"
-                value={formData.data_pedido_compra ? formData.data_pedido_compra.slice(0, 16) : ''}
+                className={`form-input ${errors.data_pedido_compra ? 'input-error' : ''}`}
+                value={formData.data_pedido_compra || ''}
                 onChange={handleChange}
               />
+              {errors.data_pedido_compra && (
+                <span className="error-message">{errors.data_pedido_compra}</span>
+              )}
             </div>
 
             <div className="form-actions">

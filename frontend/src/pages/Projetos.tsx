@@ -5,6 +5,7 @@ import Modal from '../components/Modal';
 import projetoService from '../services/projetoService';
 import faturamentoService from '../services/faturamentoService';
 import funcionarioService from '../services/funcionarioService';
+import { cronogramaService } from '../services/cronogramaService';
 
 interface Projeto {
   id: number;
@@ -57,9 +58,12 @@ const Projetos: React.FC = () => {
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
   const [faturamentoTotalProjeto, setFaturamentoTotalProjeto] = useState<number>(0);
   const [faturamentosProjeto, setFaturamentosProjeto] = useState<any[]>([]);
+  const [cronograma, setCronograma] = useState<any | null>(null);
+  const [historicoCronograma, setHistoricoCronograma] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterAno, setFilterAno] = useState<string>('');
+  const [filterAno, setFilterAno] = useState<string>(new Date().getFullYear().toString());
   const [filterTecnico, setFilterTecnico] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string[]>(['Orçando', 'Orçamento Enviado', 'Aguardando pedido de compra']);
 
   // Extrair ano do número do projeto (TC26010XX -> 26 -> 2026)
   const extrairAno = (numero: string): number => {
@@ -119,6 +123,7 @@ const Projetos: React.FC = () => {
     setSelectedProjeto(projeto);
     setIsModalOpen(true);
     carregarFaturamentosProjeto(projeto.id);
+    carregarCronogramaProjeto(projeto.id);
   };
 
   const carregarFaturamentosProjeto = async (projetoId: number) => {
@@ -134,6 +139,24 @@ const Projetos: React.FC = () => {
       console.error('Erro ao carregar faturamentos do projeto', err);
       setFaturamentoTotalProjeto(0);
       setFaturamentosProjeto([]);
+    }
+  };
+
+  const carregarCronogramaProjeto = async (projetoId: number) => {
+    try {
+      const cronogramaData = await cronogramaService.obterPorProjeto(projetoId);
+      setCronograma(cronogramaData);
+      
+      if (cronogramaData && cronogramaData.id) {
+        const historico = await cronogramaService.obterHistorico(cronogramaData.id);
+        setHistoricoCronograma(historico);
+      } else {
+        setHistoricoCronograma([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar cronograma do projeto', err);
+      setCronograma(null);
+      setHistoricoCronograma([]);
     }
   };
 
@@ -206,6 +229,17 @@ const Projetos: React.FC = () => {
     }
   };
 
+  // Lista de status únicos (ordenada conforme fluxo do projeto)
+  const statusUnicos = [
+    'Orçando',
+    'Orçamento Enviado',
+    'Aguardando pedido de compra',
+    'Teste de Viabilidade',
+    'Em Execução',
+    'Concluído',
+    'Declinado'
+  ];
+
   const filteredProjetos = projetos.filter(p => {
     const matchSearchTerm = 
       p.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -215,9 +249,29 @@ const Projetos: React.FC = () => {
     
     const matchAno = filterAno === '' || extrairAno(p.numero).toString() === filterAno;
     const matchTecnico = filterTecnico === '' || p.tecnico === filterTecnico;
+    const matchStatus = filterStatus.length === 0 || filterStatus.includes(p.status);
     
-    return matchSearchTerm && matchAno && matchTecnico;
+    return matchSearchTerm && matchAno && matchTecnico && matchStatus;
   });
+
+  // Função para alternar seleção de status
+  const toggleStatus = (status: string) => {
+    if (filterStatus.includes(status)) {
+      setFilterStatus(filterStatus.filter(s => s !== status));
+    } else {
+      setFilterStatus([...filterStatus, status]);
+    }
+  };
+
+  // Função para selecionar todos os status
+  const selectAllStatus = () => {
+    setFilterStatus([...statusUnicos]);
+  };
+
+  // Função para limpar todos os status
+  const clearAllStatus = () => {
+    setFilterStatus([]);
+  };
 
   // Calcular estatísticas (baseado em filteredProjetos para mudar conforme filtros)
   const totalProjetos = filteredProjetos.length;
@@ -343,6 +397,39 @@ const Projetos: React.FC = () => {
             </select>
           </div>
         </div>
+        
+        <div className="status-filter-container">
+          <span className="status-filter-label">Status:</span>
+          <div className="status-filter-badges">
+            <button
+              type="button"
+              className={`status-filter-badge ${filterStatus.length === statusUnicos.length ? 'active' : ''}`}
+              onClick={selectAllStatus}
+            >
+              Todos
+            </button>
+            {statusUnicos.map(status => (
+              <button
+                key={status}
+                type="button"
+                className={`status-filter-badge ${filterStatus.includes(status) ? 'active' : ''}`}
+                onClick={() => toggleStatus(status)}
+              >
+                {status}
+              </button>
+            ))}
+            {filterStatus.length > 0 && filterStatus.length < statusUnicos.length && (
+              <button
+                type="button"
+                className="status-filter-badge clear"
+                onClick={clearAllStatus}
+              >
+                ✗ Limpar seleção
+              </button>
+            )}
+          </div>
+        </div>
+        
         <div className="card-body">
           <div className="table-responsive">
             <table className="table">
@@ -355,8 +442,8 @@ const Projetos: React.FC = () => {
                   <th>Valor Orçado</th>
                   <th>Status</th>
                   <th>Ações</th>
-                </tr>
-              </thead>
+                  </tr>
+                </thead>
               <tbody>
                 {filteredProjetos.map(projeto => (
                   <tr key={projeto.id}>
@@ -368,7 +455,9 @@ const Projetos: React.FC = () => {
                     <td>
                       <span className={`badge ${
                         projeto.status === 'Concluído' ? 'badge-success' : 
-                        projeto.status === 'Em Execução' ? 'badge-blue' :
+                        projeto.status === 'Em Execução' ? 'badge-warning' :
+                        projeto.status === 'Orçando' ? 'badge-danger' :
+                        projeto.status === 'Orçamento Enviado' ? 'badge-blue' :
                         projeto.status === 'Declinado' ? 'badge-danger' :
                         'badge-gray'
                       }`}>
@@ -416,7 +505,16 @@ const Projetos: React.FC = () => {
               <strong>Técnico:</strong>
               <span>{selectedProjeto.tecnico}</span>
               <strong>Status:</strong>
-              <span>{selectedProjeto.status}</span>
+              <span className={`badge ${
+                selectedProjeto.status === 'Concluído' ? 'badge-success' : 
+                selectedProjeto.status === 'Em Execução' ? 'badge-warning' :
+                selectedProjeto.status === 'Orçando' ? 'badge-danger' :
+                selectedProjeto.status === 'Orçamento Enviado' ? 'badge-blue' :
+                selectedProjeto.status === 'Declinado' ? 'badge-danger' :
+                'badge-gray'
+              }`}>
+                {selectedProjeto.status}
+              </span>
               <strong>Faturamento Total:</strong>
               <span>{formatCurrency(faturamentoTotalProjeto)}</span>
             </div>
@@ -473,6 +571,56 @@ const Projetos: React.FC = () => {
                 </table>
               </div>
             </div>
+
+            {cronograma && (
+              <div className="details-section">
+                <h4>Cronograma de Execução</h4>
+                <div className="details-grid">
+                  <strong>Percentual de Conclusão:</strong>
+                  <span>{cronograma.percentual_conclusao}%</span>
+                  <strong>Prazo Status:</strong>
+                  <span>
+                    <span className={`badge ${
+                      cronograma.prazo_status === 'Atrasado' ? 'badge-danger' : 
+                      cronograma.prazo_status === 'Urgente' ? 'badge-warning' : 
+                      'badge-success'
+                    }`}>
+                      {cronograma.prazo_status}
+                    </span>
+                  </span>
+                  <strong>Observações:</strong>
+                  <span>{cronograma.observacoes || 'N/A'}</span>
+                </div>
+                
+                {historicoCronograma.length > 0 && (
+                  <>
+                    <h5 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>Histórico de Alterações</h5>
+                    <div className="table-responsive">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Usuário</th>
+                            <th>% Conclusão</th>
+                            <th>Observações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historicoCronograma.map((h, idx) => (
+                            <tr key={idx}>
+                              <td>{formatDateTime(h.alterado_em)}</td>
+                              <td>{h.usuario_nome || 'N/A'}</td>
+                              <td>{h.percentual_conclusao}%</td>
+                              <td>{h.observacoes || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
       </Modal>

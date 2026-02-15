@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from .database import engine, Base
-from .routes import pessoa_juridica, contato, projeto, funcionario, faturamento, auth
+from .routes import pessoa_juridica, contato, projeto, funcionario, faturamento, auth, cronograma
 from fastapi import Depends
 
 load_dotenv()
@@ -25,6 +25,7 @@ app.include_router(contato.router, prefix="/api/contatos", tags=["Contatos"])
 app.include_router(projeto.router, prefix="/api/projetos", tags=["Projetos"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(funcionario.router, prefix="/api/funcionarios", tags=["Funcionários"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(faturamento.router, prefix="/api/faturamentos", tags=["Faturamentos"], dependencies=[Depends(auth.get_current_user)])
+app.include_router(cronograma.router, prefix="/api/cronogramas", tags=["Cronogramas"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 
 @app.get("/")

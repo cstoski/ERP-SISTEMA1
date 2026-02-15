@@ -13,8 +13,9 @@ from ..models.projeto import Projeto as ProjetoModel, StatusProjeto
 from ..models.pessoa_juridica import PessoaJuridica as PessoaJuridicaModel
 from ..models.contato import Contato as ContatoModel
 from ..models.faturamento import Faturamento as FaturamentoModel
+from ..models.cronograma import Cronograma as CronogramaModel, CronogramaHistorico as CronogramaHistoricoModel
 from ..models.user import User as UserModel
-from ..config import settings
+from ..config import settings, get_local_now
 from ..schemas.projeto import Projeto, ProjetoCreate, ProjetoUpdate
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -485,6 +486,69 @@ def exportar_pdf(
     else:
         story.append(Paragraph("Nenhum faturamento registrado para este projeto.", label_style))
 
+    # Buscar cronograma e histórico
+    cronograma = db.query(CronogramaModel).filter(CronogramaModel.projeto_id == projeto.id).first()
+    if cronograma:
+        # Calcular prazo status
+        prazo_status = "No prazo"
+        if projeto.data_pedido_compra and projeto.prazo_entrega_dias:
+            from datetime import timedelta
+            prazo_entrega = projeto.data_pedido_compra + timedelta(days=projeto.prazo_entrega_dias)
+            dias_restantes = (prazo_entrega - datetime.now()).days
+            
+            if dias_restantes < 0:
+                prazo_status = "Atrasado"
+            elif dias_restantes <= 5:
+                prazo_status = "Urgente"
+        
+        story.append(Spacer(1, 12))
+        add_section("Cronograma de Execucao")
+        add_table(
+            [
+                ["Campo", "Valor"],
+                ["Percentual de Conclusao", f"{cronograma.percentual_conclusao}%"],
+                ["Prazo Status", prazo_status],
+                ["Observacoes", cronograma.observacoes or "N/A"],
+            ]
+        )
+        
+        # Histórico do cronograma
+        historico = db.query(CronogramaHistoricoModel).filter(
+            CronogramaHistoricoModel.cronograma_id == cronograma.id
+        ).order_by(CronogramaHistoricoModel.criado_em.desc()).all()
+        
+        if historico:
+            story.append(Paragraph("Historico de Alteracoes", subtitle_style))
+            hist_rows = [["Data", "Usuario", "% Conclusao", "Observacoes"]]
+            for h in historico:
+                usuario = db.query(UserModel).filter(UserModel.id == h.criado_por_id).first()
+                usuario_nome = usuario.username if usuario else "N/A"
+                hist_rows.append(
+                    [
+                        _format_datetime_br(h.criado_em),
+                        usuario_nome,
+                        f"{h.percentual_conclusao}%",
+                        h.observacoes or "-",
+                    ]
+                )
+            hist_table = Table(hist_rows, colWidths=[100, 120, 80, 200])
+            hist_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e5e7eb")),
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+                        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#e5e7eb")),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                        ("TOPPADDING", (0, 0), (-1, -1), 3),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ]
+                )
+            )
+            story.append(hist_table)
+
     def draw_header_footer(canvas_obj, doc_obj):
         canvas_obj.saveState()
 
@@ -570,7 +634,12 @@ def obter_projeto(projeto_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{projeto_id}", response_model=Projeto)
-def atualizar_projeto(projeto_id: int, projeto: ProjetoUpdate, db: Session = Depends(get_db)):
+def atualizar_projeto(
+    projeto_id: int, 
+    projeto: ProjetoUpdate, 
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
     db_projeto = db.query(ProjetoModel).filter(ProjetoModel.id == projeto_id).first()
     if not db_projeto:
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
@@ -585,12 +654,110 @@ def atualizar_projeto(projeto_id: int, projeto: ProjetoUpdate, db: Session = Dep
         if existente:
             raise HTTPException(status_code=400, detail="Número de projeto já existe")
     
+    # Verificar se o status foi alterado para "Concluído"
+    status_anterior = db_projeto.status
+    status_novo = update_data.get('status', status_anterior)
+    
+    # Validar campos obrigatórios quando status for "Em Execução"
+    if status_novo == "Em Execução":
+        # Pegar valores dos campos do update ou do projeto existente
+        valor_orcado = update_data.get('valor_orcado', db_projeto.valor_orcado)
+        valor_venda = update_data.get('valor_venda', db_projeto.valor_venda)
+        prazo_entrega_dias = update_data.get('prazo_entrega_dias', db_projeto.prazo_entrega_dias)
+        data_pedido_compra = update_data.get('data_pedido_compra', db_projeto.data_pedido_compra)
+        
+        erros = []
+        if not valor_orcado or valor_orcado <= 0:
+            erros.append("Valor Orçado é obrigatório e deve ser maior que zero")
+        if not valor_venda or valor_venda <= 0:
+            erros.append("Valor de Venda é obrigatório e deve ser maior que zero")
+        if not prazo_entrega_dias or prazo_entrega_dias <= 0:
+            erros.append("Prazo de Entrega é obrigatório e deve ser maior que zero")
+        if not data_pedido_compra:
+            erros.append("Data do Pedido de Compra é obrigatória")
+        
+        if erros:
+            raise HTTPException(status_code=400, detail=" | ".join(erros))
+    
     for key, value in update_data.items():
         setattr(db_projeto, key, value)
     
     db.add(db_projeto)
     db.commit()
     db.refresh(db_projeto)
+    
+    # Se o projeto foi marcado como concluído, atualizar o cronograma
+    if status_novo == "Concluído" and status_anterior != "Concluído":
+        cronograma = db.query(CronogramaModel).filter(
+            CronogramaModel.projeto_id == projeto_id
+        ).first()
+        
+        if cronograma:
+            # Criar registro no histórico antes de atualizar
+            historico = CronogramaHistoricoModel(
+                cronograma_id=cronograma.id,
+                percentual_conclusao=Decimal('100.00'),
+                observacoes="Projeto concluído",
+                criado_por_id=current_user.id
+            )
+            db.add(historico)
+            
+            # Atualizar cronograma
+            cronograma.percentual_conclusao = Decimal('100.00')
+            cronograma.observacoes = "Projeto concluído"
+            cronograma.atualizado_por_id = current_user.id
+            cronograma.atualizado_em = get_local_now()
+            
+            db.add(cronograma)
+            db.commit()
+    
+    # Se o projeto foi marcado como "Em Execução", atualizar o cronograma
+    if status_novo == "Em Execução" and status_anterior != "Em Execução":
+        cronograma = db.query(CronogramaModel).filter(
+            CronogramaModel.projeto_id == projeto_id
+        ).first()
+        
+        # Se não existe cronograma, criar um
+        if not cronograma:
+            cronograma = CronogramaModel(
+                projeto_id=projeto_id,
+                percentual_conclusao=Decimal('0.00'),
+                observacoes="Pedido de Compra recebido",
+                atualizado_por_id=current_user.id
+            )
+            db.add(cronograma)
+            db.commit()
+            db.refresh(cronograma)
+            
+            # Criar registro no histórico
+            historico = CronogramaHistoricoModel(
+                cronograma_id=cronograma.id,
+                percentual_conclusao=Decimal('0.00'),
+                observacoes="Pedido de Compra recebido",
+                criado_por_id=current_user.id
+            )
+            db.add(historico)
+            db.commit()
+        else:
+            # Cronograma já existe, apenas atualizar
+            # Criar registro no histórico antes de atualizar
+            historico = CronogramaHistoricoModel(
+                cronograma_id=cronograma.id,
+                percentual_conclusao=Decimal('0.00'),
+                observacoes="Pedido de Compra recebido",
+                criado_por_id=current_user.id
+            )
+            db.add(historico)
+            
+            # Atualizar cronograma
+            cronograma.percentual_conclusao = Decimal('0.00')
+            cronograma.observacoes = "Pedido de Compra recebido"
+            cronograma.atualizado_por_id = current_user.id
+            cronograma.atualizado_em = get_local_now()
+            
+            db.add(cronograma)
+            db.commit()
+    
     return db_projeto
 
 
