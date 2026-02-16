@@ -45,6 +45,15 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
   - Licença MIT
   - Termos de uso
 
+### Arquitetura e Regras
+
+- **[📋 Regras de Negócio](./REGRAS_NEGOCIO.md)**
+  - Documentação de todos os modelos do backend
+  - Validações e constraints
+  - Workflows e status
+  - Relacionamentos entre entidades
+  - Casos de uso e exemplos
+
 ### Contribuição
 
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)**
@@ -92,6 +101,15 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 | Enviar uma contribuição | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Entender padrões de código | [CONTRIBUTING.md - Padrões](./CONTRIBUTING.md) |
 | Criar um commit | [CONTRIBUTING.md - Commits](./CONTRIBUTING.md) |
+
+### Entendendo o Sistema
+
+| Preciso... | Documento |
+|-----------|-----------|
+| Entender regras de validação | [Regras de Negócio](./REGRAS_NEGOCIO.md) |
+| Ver estrutura dos modelos | [Regras de Negócio](./REGRAS_NEGOCIO.md) |
+| Entender workflows (status) | [Regras de Negócio - Workflows](./REGRAS_NEGOCIO.md) |
+| Ver relacionamentos entre tabelas | [Regras de Negócio - Relacionamentos](./REGRAS_NEGOCIO.md#10-relacionamentos-entre-modelos) |
 
 ---
 

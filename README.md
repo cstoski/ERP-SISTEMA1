@@ -40,6 +40,9 @@ Sistema ERP profissional desenvolvido com FastAPI (backend) e React + TypeScript
 
 - **[⚡ QUICK_START.md](./QUICK_START.md)** - Guia rápido de 5 minutos
 - **[📖 GUIA_DESENVOLVIMENTO.md](./GUIA_DESENVOLVIMENTO.md)** - Guia completo e detalhado
+- **[📋 REGRAS_NEGOCIO.md](./REGRAS_NEGOCIO.md)** - Documentação completa dos modelos e regras de negócio
+- **[🪟 COMANDOS_WINDOWS.md](./COMANDOS_WINDOWS.md)** - Todos os comandos para Windows/PowerShell
+- **[📚 DOCUMENTACAO.md](./DOCUMENTACAO.md)** - Índice central de toda a documentação
 
 ### ⚡ Execução Rápida (Windows)
 
@@ -396,7 +399,9 @@ LOGO_PATH=./public/assets/images/illustrations/takt_menor.jpg
 
 - **[⚡ Quick Start](./QUICK_START.md)** - Comece em 5 minutos
 - **[📖 Guia de Desenvolvimento](./GUIA_DESENVOLVIMENTO.md)** - Documentação completa
-- **[� Comandos Windows](./COMANDOS_WINDOWS.md)** - Comandos PowerShell (equivalentes ao Makefile)
+- **[📋 Regras de Negócio](./REGRAS_NEGOCIO.md)** - Modelos, validações e workflows
+- **[🪟 Comandos Windows](./COMANDOS_WINDOWS.md)** - Comandos PowerShell (equivalentes ao Makefile)
+- **[📚 Índice Central](./DOCUMENTACAO.md)** - Navegação por toda a documentação
 - **[�🤝 Contribuindo](./CONTRIBUTING.md)** - Como contribuir com o projeto
 - **[📋 Changelog](./CHANGELOG.md)** - Histórico de versões
 - **[📜 Licença](./LICENSE)** - Termos de uso
