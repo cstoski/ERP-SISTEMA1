@@ -21,12 +21,12 @@ app.add_middleware(
 
 app.include_router(pessoa_juridica.router, prefix="/api/pessoas-juridicas", tags=["Pessoas Jurídicas"])
 app.include_router(contato.router, prefix="/api/contatos", tags=["Contatos"])
+app.include_router(produto_servico.router, prefix="/api/produtos-servicos", tags=["Produtos/Serviços"])
 # Protect main entity routes with authentication
 app.include_router(projeto.router, prefix="/api/projetos", tags=["Projetos"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(funcionario.router, prefix="/api/funcionarios", tags=["Funcionários"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(faturamento.router, prefix="/api/faturamentos", tags=["Faturamentos"], dependencies=[Depends(auth.get_current_user)])
 app.include_router(cronograma.router, prefix="/api/cronogramas", tags=["Cronogramas"], dependencies=[Depends(auth.get_current_user)])
-app.include_router(produto_servico.router, prefix="/api/produtos-servicos", tags=["Produtos/Serviços"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 
 @app.get("/")

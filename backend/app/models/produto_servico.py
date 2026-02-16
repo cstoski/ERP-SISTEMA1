@@ -23,8 +23,7 @@ class ProdutoServico(Base):
     codigo_fabricante = Column(String(50), nullable=True)
     nome_fabricante = Column(String(255), nullable=True)
     preco_unitario = Column(Numeric(15, 2), default=0.00)
-    ncm = Column(String(20), nullable=True)
-    lcp = Column(String(20), nullable=True)
+    ncm_lcp = Column(String(50), nullable=True)
     criado_em = Column(DateTime, default=get_local_now)
     atualizado_em = Column(DateTime, default=get_local_now, onupdate=get_local_now)
 
@@ -52,3 +51,16 @@ class ProdutoServicoFornecedor(Base):
 
     produto_servico = relationship("ProdutoServico", back_populates="fornecedores")
     fornecedor = relationship("PessoaJuridica")
+
+
+class ProdutoServicoHistoricoPreco(Base):
+    __tablename__ = "produtos_servicos_historico_precos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    produto_servico_id = Column(Integer, ForeignKey("produtos_servicos.id"), nullable=False)
+    preco_medio = Column(Numeric(15, 2), nullable=False)
+    preco_minimo = Column(Numeric(15, 2), nullable=False)
+    preco_maximo = Column(Numeric(15, 2), nullable=False)
+    registrado_em = Column(DateTime, default=get_local_now)
+
+    produto_servico = relationship("ProdutoServico")

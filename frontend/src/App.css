@@ -1886,6 +1886,14 @@ body, html, #root {
   color: white;
 }
 
+/* Container de Ações */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
 /* Botões de Ação Modernos */
 .btn-action {
   width: 32px;
@@ -1927,7 +1935,10 @@ body, html, #root {
 .nested-card {
   margin-bottom: 0.75rem;
   border: 1px solid #e2e8f0;
-  background: #f9fafb;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .empty-state {
@@ -1939,4 +1950,15 @@ body, html, #root {
 .fornecedor-actions {
   display: flex;
   align-items: flex-end;
+}
+
+.detail-value {
+  padding: 0.5rem 0.75rem;
+  background-color: #f8f9fc;
+  border-radius: 0.35rem;
+  font-weight: 500;
+  color: #5a5c69;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
 }

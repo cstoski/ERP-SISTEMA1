@@ -28,8 +28,7 @@ export interface ProdutoServico {
   codigo_fabricante?: string;
   nome_fabricante?: string;
   preco_unitario: number;
-  ncm?: string;
-  lcp?: string;
+  ncm_lcp?: string;
   fornecedores: ProdutoServicoFornecedor[];
   criado_em: string;
   atualizado_em?: string;
@@ -42,9 +41,17 @@ export interface ProdutoServicoCreate {
   codigo_fabricante?: string;
   nome_fabricante?: string;
   preco_unitario: number;
-  ncm?: string;
-  lcp?: string;
+  ncm_lcp?: string;
   fornecedores: ProdutoServicoFornecedor[];
+}
+
+export interface ProdutoServicoHistoricoPreco {
+  id: number;
+  produto_servico_id: number;
+  preco_medio: number;
+  preco_minimo: number;
+  preco_maximo: number;
+  registrado_em: string;
 }
 
 export const produtoServicoService = {
@@ -57,6 +64,7 @@ export const produtoServicoService = {
   atualizar: (id: number, data: Partial<ProdutoServicoCreate>) =>
     api.put<ProdutoServico>(`/api/produtos-servicos/${id}`, data),
   deletar: (id: number) => api.delete(`/api/produtos-servicos/${id}`),
+  obterHistoricoPrecos: (id: number) => api.get<ProdutoServicoHistoricoPreco[]>(`/api/produtos-servicos/${id}/historico-precos`),
 };
 
 export default produtoServicoService;

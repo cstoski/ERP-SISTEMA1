@@ -219,7 +219,14 @@ const PessoasJuridicas: React.FC = () => {
         </div>
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table">
+            <style>{`
+              .table-compact td,
+              .table-compact th {
+                padding: 0.4rem !important;
+                vertical-align: middle !important;
+              }
+            `}</style>
+            <table className="table table-compact" style={{ fontSize: '12px' }}>
               <thead>
                 <tr>
                   <th>Razão Social</th>

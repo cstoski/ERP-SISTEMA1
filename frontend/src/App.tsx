@@ -22,6 +22,7 @@ import FaturamentoForm from './pages/FaturamentoForm';
 import Cronogramas from './pages/Cronogramas';
 import ProdutosServicos from './pages/ProdutosServicos';
 import ProdutoServicoForm from './pages/ProdutoServicoForm';
+import ProdutoServicoDetalhes from './pages/ProdutoServicoDetalhes';
 import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
 import NotFound from './pages/NotFound';
@@ -180,6 +181,14 @@ const AppContent: React.FC = () => {
                 element={
                   <RequireAuth>
                     <ProdutoServicoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/produtos-servicos/detalhes/:id"
+                element={
+                  <RequireAuth>
+                    <ProdutoServicoDetalhes />
                   </RequireAuth>
                 }
               />

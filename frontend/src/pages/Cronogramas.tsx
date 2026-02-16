@@ -14,6 +14,20 @@ const formatDateTime = (isoString: string) => {
   });
 };
 
+// Funções para lidar com números no formato brasileiro (vírgula como decimal)
+const parseNumberBR = (value: string): number => {
+  if (!value || value.trim() === '') return 0;
+  // Remove espaços e substitui vírgula por ponto
+  const normalized = value.trim().replace(',', '.');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+const formatNumberBR = (value: number): string => {
+  if (isNaN(value)) return '0';
+  return value.toString().replace('.', ',');
+};
+
 const Cronogramas: React.FC = () => {
   const [cronogramas, setCronogramas] = useState<Cronograma[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -59,7 +73,7 @@ const Cronogramas: React.FC = () => {
 
   const handleEditar = (cronograma: Cronograma) => {
     setSelectedCronograma(cronograma);
-    setPercentual(cronograma.percentual_conclusao.toString());
+    setPercentual(formatNumberBR(cronograma.percentual_conclusao));
     setObservacoes(cronograma.observacoes || '');
     setIsEditModalOpen(true);
   };
@@ -69,7 +83,7 @@ const Cronogramas: React.FC = () => {
 
     try {
       await cronogramaService.atualizar(selectedCronograma.id, {
-        percentual_conclusao: parseFloat(percentual),
+        percentual_conclusao: parseNumberBR(percentual),
         observacoes: observacoes || undefined
       });
       setIsEditModalOpen(false);
@@ -195,7 +209,14 @@ const Cronogramas: React.FC = () => {
             </div>
           ) : (
             <div className="table-responsive">
-              <table className="table">
+              <style>{`
+                .table-compact td,
+                .table-compact th {
+                  padding: 0.4rem !important;
+                  vertical-align: middle !important;
+                }
+              `}</style>
+              <table className="table table-compact" style={{ fontSize: '12px' }}>
                 <thead>
                   <tr>
                     <th>Projeto</th>
@@ -282,13 +303,11 @@ const Cronogramas: React.FC = () => {
               Percentual de Conclusão (%)
             </label>
             <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
+              type="text"
               value={percentual}
               onChange={(e) => setPercentual(e.target.value)}
               className="form-input"
+              placeholder="0,00"
             />
           </div>
           <div className="form-group">

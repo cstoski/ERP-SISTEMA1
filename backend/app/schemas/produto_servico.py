@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime
@@ -25,6 +25,10 @@ class ProdutoServicoFornecedorBase(BaseModel):
     cofins: Decimal = Decimal("0.00")
     iss: Decimal = Decimal("0.00")
 
+    @field_serializer('preco_unitario', 'icms', 'ipi', 'pis', 'cofins', 'iss')
+    def serialize_decimal(self, value: Decimal) -> float:
+        return float(value) if value is not None else 0.0
+
 
 class ProdutoServicoFornecedorCreate(ProdutoServicoFornecedorBase):
     pass
@@ -45,9 +49,12 @@ class ProdutoServicoBase(BaseModel):
     codigo_fabricante: Optional[str] = None
     nome_fabricante: Optional[str] = None
     preco_unitario: Decimal = Decimal("0.00")
-    ncm: Optional[str] = None
-    lcp: Optional[str] = None
+    ncm_lcp: Optional[str] = None
     fornecedores: List[ProdutoServicoFornecedorCreate] = []
+
+    @field_serializer('preco_unitario')
+    def serialize_decimal(self, value: Decimal) -> float:
+        return float(value) if value is not None else 0.0
 
 
 class ProdutoServicoCreate(ProdutoServicoBase):
@@ -63,8 +70,7 @@ class ProdutoServicoUpdate(BaseModel):
     codigo_fabricante: Optional[str] = None
     nome_fabricante: Optional[str] = None
     preco_unitario: Optional[Decimal] = None
-    ncm: Optional[str] = None
-    lcp: Optional[str] = None
+    ncm_lcp: Optional[str] = None
     fornecedores: Optional[List[ProdutoServicoFornecedorCreate]] = None
 
 
@@ -74,6 +80,29 @@ class ProdutoServico(ProdutoServicoBase):
     criado_em: datetime
     atualizado_em: Optional[datetime] = None
     fornecedores: List[ProdutoServicoFornecedor] = []
+
+    class Config:
+        from_attributes = True
+
+
+class ProdutoServicoHistoricoPrecoBase(BaseModel):
+    preco_medio: Decimal = Decimal("0.00")
+    preco_minimo: Decimal = Decimal("0.00")
+    preco_maximo: Decimal = Decimal("0.00")
+
+    @field_serializer('preco_medio', 'preco_minimo', 'preco_maximo')
+    def serialize_decimal(self, value: Decimal) -> float:
+        return float(value) if value is not None else 0.0
+
+
+class ProdutoServicoHistoricoPrecoCreate(ProdutoServicoHistoricoPrecoBase):
+    pass
+
+
+class ProdutoServicoHistoricoPreco(ProdutoServicoHistoricoPrecoBase):
+    id: int
+    produto_servico_id: int
+    registrado_em: datetime
 
     class Config:
         from_attributes = True

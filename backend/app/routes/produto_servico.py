@@ -1,46 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from jose import JWTError, jwt
-from fastapi.security import OAuth2PasswordBearer
+from decimal import Decimal
 
 from ..database import get_db
 from ..models.produto_servico import (
     ProdutoServico as ProdutoServicoModel,
     ProdutoServicoFornecedor as ProdutoServicoFornecedorModel,
+    ProdutoServicoHistoricoPreco as ProdutoServicoHistoricoPrecoModel,
     TipoProdutoServico,
 )
 from ..models.pessoa_juridica import PessoaJuridica as PessoaJuridicaModel
-from ..models.user import User
 from ..schemas import produto_servico as schemas
 
-# Configuração local para autenticação (mesmos valores do auth.py)
-SECRET_KEY = "CHANGE_THIS_SECRET_KEY"
-ALGORITHM = "HS256"
-oauth2_scheme_local = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
-
-def get_current_user_local(token: str = Depends(oauth2_scheme_local), db: Session = Depends(get_db)):
-    """Versão local de get_current_user para evitar problemas de importação"""
-    print(f"[DEBUG LOCAL] get_current_user_local chamado")
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    from ..models.user import User as UserModel
-    user = db.query(UserModel).filter(UserModel.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
-
 router = APIRouter()
+
+
+def calcular_preco_com_impostos(
+    preco_unitario: Decimal,
+    ipi: Decimal
+) -> Decimal:
+    """Calcula o preço com impostos (apenas IPI é adicionado, outros são por dentro)"""
+    preco_base = Decimal(str(preco_unitario)) or Decimal("0.00")
+    ipi_percent = Decimal(str(ipi)) or Decimal("0.00")
+    ipi_valor = ipi_percent / 100
+    return preco_base * (1 + ipi_valor)
+
+
+def calcular_preco_medio_com_impostos(db: Session, produto_id: int) -> tuple[Decimal, Decimal, Decimal]:
+    """Calcula preço médio, mínimo e máximo com impostos para um produto"""
+    fornecedores = db.query(ProdutoServicoFornecedorModel).filter(
+        ProdutoServicoFornecedorModel.produto_servico_id == produto_id
+    ).all()
+    
+    if not fornecedores:
+        return Decimal("0.00"), Decimal("0.00"), Decimal("0.00")
+    
+    precos = [
+        calcular_preco_com_impostos(f.preco_unitario, f.ipi)
+        for f in fornecedores
+    ]
+    
+    total = sum(precos)
+    media = total / len(precos)
+    minimo = min(precos)
+    maximo = max(precos)
+    
+    return media, minimo, maximo
+
+
+def registrar_historico_precos(db: Session, produto_id: int, preco_meio: Decimal, preco_minimo: Decimal, preco_maximo: Decimal):
+    """Registra os preços no histórico"""
+    historico = ProdutoServicoHistoricoPrecoModel(
+        produto_servico_id=produto_id,
+        preco_medio=preco_meio,
+        preco_minimo=preco_minimo,
+        preco_maximo=preco_maximo,
+    )
+    db.add(historico)
+    db.commit()
+
 
 
 @router.get("/test-health")
@@ -89,7 +108,6 @@ def gerar_codigo_interno(db: Session, tipo: str) -> str:
 def criar_produto_servico(
     produto: schemas.ProdutoServicoCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_local),
 ):
     codigo_interno = gerar_codigo_interno(db, produto.tipo)
 
@@ -101,8 +119,7 @@ def criar_produto_servico(
         codigo_fabricante=produto.codigo_fabricante,
         nome_fabricante=produto.nome_fabricante,
         preco_unitario=produto.preco_unitario,
-        ncm=produto.ncm,
-        lcp=produto.lcp,
+        ncm_lcp=produto.ncm_lcp,
     )
     db.add(db_produto)
     db.flush()
@@ -130,15 +147,19 @@ def criar_produto_servico(
 
     db.commit()
     db.refresh(db_produto)
+    
+    # Registra o preço inicial no histórico (se houver fornecedores)
+    if produto.fornecedores:
+        media, minimo, maximo = calcular_preco_medio_com_impostos(db, db_produto.id)
+        registrar_historico_precos(db, db_produto.id, media, minimo, maximo)
+    
     return db_produto
 
 
 @router.get("/", response_model=List[schemas.ProdutoServico])
 def listar_produtos_servicos(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_local),
 ):
-    print(f"[DEBUG ROTA] listar_produtos_servicos chamado. Usuário: {current_user.username if current_user else 'None'}")
     return db.query(ProdutoServicoModel).all()
 
 
@@ -146,7 +167,6 @@ def listar_produtos_servicos(
 def obter_produto_servico(
     produto_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_local),
 ):
     produto = db.query(ProdutoServicoModel).filter(ProdutoServicoModel.id == produto_id).first()
     if not produto:
@@ -159,7 +179,6 @@ def atualizar_produto_servico(
     produto_id: int,
     produto: schemas.ProdutoServicoUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_local),
 ):
     db_produto = db.query(ProdutoServicoModel).filter(ProdutoServicoModel.id == produto_id).first()
     if not db_produto:
@@ -172,32 +191,41 @@ def atualizar_produto_servico(
         setattr(db_produto, key, value)
 
     if fornecedores is not None:
+        # Remove os fornecedores antigos
         db.query(ProdutoServicoFornecedorModel).filter(
             ProdutoServicoFornecedorModel.produto_servico_id == produto_id
         ).delete()
 
+        # Adiciona os novos fornecedores
         for fornecedor in fornecedores:
+            # fornecedor é um dict após model_dump()
             fornecedor_existe = db.query(PessoaJuridicaModel).filter(
-                PessoaJuridicaModel.id == fornecedor.fornecedor_id
+                PessoaJuridicaModel.id == fornecedor['fornecedor_id']
             ).first()
             if not fornecedor_existe:
                 raise HTTPException(status_code=400, detail="Fornecedor não encontrado")
 
             db_fornecedor = ProdutoServicoFornecedorModel(
                 produto_servico_id=produto_id,
-                fornecedor_id=fornecedor.fornecedor_id,
-                codigo_fornecedor=fornecedor.codigo_fornecedor,
-                preco_unitario=fornecedor.preco_unitario,
-                prazo_entrega_dias=fornecedor.prazo_entrega_dias,
-                icms=fornecedor.icms,
-                ipi=fornecedor.ipi,
-                pis=fornecedor.pis,
-                cofins=fornecedor.cofins,
-                iss=fornecedor.iss,
+                fornecedor_id=fornecedor['fornecedor_id'],
+                codigo_fornecedor=fornecedor['codigo_fornecedor'],
+                preco_unitario=fornecedor['preco_unitario'],
+                prazo_entrega_dias=fornecedor['prazo_entrega_dias'],
+                icms=fornecedor['icms'],
+                ipi=fornecedor['ipi'],
+                pis=fornecedor['pis'],
+                cofins=fornecedor['cofins'],
+                iss=fornecedor['iss'],
             )
             db.add(db_fornecedor)
 
     db.commit()
+    
+    # Calcula e registra o novo preço médio no histórico
+    if fornecedores is not None:
+        media, minimo, maximo = calcular_preco_medio_com_impostos(db, produto_id)
+        registrar_historico_precos(db, produto_id, media, minimo, maximo)
+    
     db.refresh(db_produto)
     return db_produto
 
@@ -206,7 +234,6 @@ def atualizar_produto_servico(
 def deletar_produto_servico(
     produto_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_local),
 ):
     db_produto = db.query(ProdutoServicoModel).filter(ProdutoServicoModel.id == produto_id).first()
     if not db_produto:
@@ -217,3 +244,18 @@ def deletar_produto_servico(
     return {"message": "Produto/Serviço deletado com sucesso"}
 
 
+@router.get("/{produto_id}/historico-precos", response_model=List[schemas.ProdutoServicoHistoricoPreco])
+def obter_historico_precos(
+    produto_id: int,
+    db: Session = Depends(get_db),
+):
+    """Retorna o histórico de preços médios de um produto"""
+    produto = db.query(ProdutoServicoModel).filter(ProdutoServicoModel.id == produto_id).first()
+    if not produto:
+        raise HTTPException(status_code=404, detail="Produto/Serviço não encontrado")
+    
+    historico = db.query(ProdutoServicoHistoricoPrecoModel).filter(
+        ProdutoServicoHistoricoPrecoModel.produto_servico_id == produto_id
+    ).order_by(ProdutoServicoHistoricoPrecoModel.registrado_em.asc()).all()
+    
+    return historico

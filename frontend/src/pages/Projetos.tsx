@@ -432,7 +432,14 @@ const Projetos: React.FC = () => {
         
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table">
+            <style>{`
+              .table-compact td,
+              .table-compact th {
+                padding: 0.4rem !important;
+                vertical-align: middle !important;
+              }
+            `}</style>
+            <table className="table table-compact" style={{ fontSize: '12px' }}>
               <thead>
                 <tr>
                   <th>Número</th>
@@ -546,7 +553,14 @@ const Projetos: React.FC = () => {
             <div className="details-section">
               <h4>Faturamentos</h4>
               <div className="table-responsive">
-                <table className="table">
+                <style>{`
+                  .table-compact td,
+                  .table-compact th {
+                    padding: 0.4rem !important;
+                    vertical-align: middle !important;
+                  }
+                `}</style>
+                <table className="table table-compact" style={{ fontSize: '12px' }}>
                   <thead>
                     <tr>
                       <th>Data</th>
@@ -596,7 +610,14 @@ const Projetos: React.FC = () => {
                   <>
                     <h5 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>Histórico de Alterações</h5>
                     <div className="table-responsive">
-                      <table className="table">
+                      <style>{`
+                        .table-compact td,
+                        .table-compact th {
+                          padding: 0.4rem !important;
+                          vertical-align: middle !important;
+                        }
+                      `}</style>
+                      <table className="table table-compact" style={{ fontSize: '12px' }}>
                         <thead>
                           <tr>
                             <th>Data</th>

@@ -48,6 +48,20 @@ const statusOptions = [
   'Concluído'
 ];
 
+// Funções para lidar com números no formato brasileiro (vírgula como decimal)
+const parseNumberBR = (value: string): number => {
+  if (!value || value.trim() === '') return 0;
+  // Remove espaços e substitui vírgula por ponto
+  const normalized = value.trim().replace(',', '.');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+const formatNumberBR = (value: number): string => {
+  if (isNaN(value)) return '0';
+  return value.toString().replace('.', ',');
+};
+
 const ProjetoForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
@@ -199,7 +213,7 @@ const ProjetoForm: React.FC = () => {
     
     let processedValue: any = value;
     if (name === 'valor_orcado' || name === 'valor_venda') {
-      processedValue = parseFloat(value) || 0;
+      processedValue = parseNumberBR(value);
     } else if (name === 'cliente_id' || name === 'contato_id' || name === 'prazo_entrega_dias') {
       processedValue = parseInt(value) || 0;
     }
@@ -398,14 +412,12 @@ const ProjetoForm: React.FC = () => {
                   {isEditMode && formData.status === 'Em Execução' && ' *'}
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="valor_orcado"
                   placeholder="0,00"
                   className={`form-input ${errors.valor_orcado ? 'input-error' : ''}`}
-                  value={formData.valor_orcado}
+                  value={formData.valor_orcado === 0 ? '' : formatNumberBR(formData.valor_orcado)}
                   onChange={handleChange}
-                  step="0.01"
-                  min="0"
                 />
                 {errors.valor_orcado && <span className="error-message">{errors.valor_orcado}</span>}
               </div>
@@ -416,14 +428,12 @@ const ProjetoForm: React.FC = () => {
                   {isEditMode && formData.status === 'Em Execução' && ' *'}
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="valor_venda"
                   placeholder="0,00"
                   className={`form-input ${errors.valor_venda ? 'input-error' : ''}`}
-                  value={formData.valor_venda}
+                  value={formData.valor_venda === 0 ? '' : formatNumberBR(formData.valor_venda)}
                   onChange={handleChange}
-                  step="0.01"
-                  min="0"
                 />
                 {errors.valor_venda && <span className="error-message">{errors.valor_venda}</span>}
               </div>
