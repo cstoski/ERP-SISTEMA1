@@ -36,3 +36,4 @@ class Projeto(Base):
     cliente = relationship("PessoaJuridica", back_populates="projetos")
     contato = relationship("Contato", back_populates="projetos")
     faturamentos = relationship("Faturamento", back_populates="projeto", cascade="all, delete-orphan")
+    despesas = relationship("DespesaProjeto", back_populates="projeto", cascade="all, delete-orphan")

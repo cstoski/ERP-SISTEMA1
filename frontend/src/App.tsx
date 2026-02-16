@@ -23,6 +23,8 @@ import Cronogramas from './pages/Cronogramas';
 import ProdutosServicos from './pages/ProdutosServicos';
 import ProdutoServicoForm from './pages/ProdutoServicoForm';
 import ProdutoServicoDetalhes from './pages/ProdutoServicoDetalhes';
+import DespesasProjetos from './pages/DespesasProjetos';
+import DespesaProjetoForm from './pages/DespesaProjetoForm';
 import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
 import NotFound from './pages/NotFound';
@@ -221,6 +223,30 @@ const AppContent: React.FC = () => {
                 element={
                   <RequireAuth>
                     <Cronogramas />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/despesas-projetos"
+                element={
+                  <RequireAuth>
+                    <DespesasProjetos />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/despesas-projetos/novo"
+                element={
+                  <RequireAuth>
+                    <DespesaProjetoForm />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/despesas-projetos/editar/:id"
+                element={
+                  <RequireAuth>
+                    <DespesaProjetoForm />
                   </RequireAuth>
                 }
               />
