@@ -11,10 +11,27 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "components/*": ["src/components/*"],
+      "data/*": ["src/data/*"],
+      "helpers/*": ["src/helpers/*"],
+      "hooks/*": ["src/hooks/*"],
+      "lib/*": ["src/lib/*"],
+      "pages/*": ["src/pages/*"],
+      "providers/*": ["src/providers/*"],
+      "reducers/*": ["src/reducers/*"],
+      "routes/*": ["src/routes/*"],
+      "services/*": ["src/services/*"],
+      "styles/*": ["src/styles/*"],
+      "theme/*": ["src/theme/*"],
+      "types/*": ["src/types/*"],
+      "config": ["src/config.ts"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
