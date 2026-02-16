@@ -4,18 +4,27 @@ from dotenv import load_dotenv
 from .database import engine, Base
 from .routes import pessoa_juridica, contato, projeto, funcionario, faturamento, auth, cronograma, produto_servico, despesa_projeto
 from fastapi import Depends
+from .config import settings
 
 load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="ERP Sistema", version="1.0.0")
+app = FastAPI(
+    title="ERP Sistema TAKT",
+    version="1.0.0",
+    docs_url="/api/docs" if not settings.is_production() else None,  # Desabilitar docs em produção
+    redoc_url="/api/redoc" if not settings.is_production() else None,
+)
+
+# Configurar CORS com origens específicas
+allowed_origins = settings.get_allowed_origins()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
 

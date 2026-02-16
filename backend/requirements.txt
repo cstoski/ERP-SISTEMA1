@@ -9,7 +9,18 @@ openpyxl==3.1.5
 pytz==2024.1
 psycopg2-binary==2.9.9
 
+# Database drivers
+# Para PostgreSQL (já incluído acima: psycopg2-binary)
+# Para MySQL (descomente se usar MySQL no cPanel)
+# pymysql==1.1.0
+
+# WSGI adapter para cPanel/Passenger
+a2wsgi==1.10.4
+
 # Auth dependencies
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 reportlab==4.2.0
+
+# Alembic para migrações
+alembic==1.13.1
