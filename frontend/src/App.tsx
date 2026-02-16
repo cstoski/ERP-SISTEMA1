@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
-import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/authentication/Login';
 import Signup from './pages/authentication/Signup';
 import ResetSenha from './pages/ResetSenha';
@@ -29,6 +29,7 @@ import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
 import Configuracoes from './pages/Configuracoes';
 import NotFound from './pages/NotFound';
+import './App.css';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -50,7 +51,7 @@ const AppContent: React.FC = () => {
     <ErrorBoundary>
       <div className="app-container">
         {!isAuthPage && <Sidebar isCollapsed={isSidebarCollapsed} />}
-        <main className="main-content" style={isAuthPage ? { width: '100%' } : {}}>
+        <main className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`} style={isAuthPage ? { width: '100%' } : {}}>
           {!isAuthPage && (
             <Header isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={handleToggleSidebar} />
           )}
@@ -64,7 +65,7 @@ const AppContent: React.FC = () => {
                 path="/dashboard"
                 element={
                   <RequireAuth>
-                    <Home />
+                    <Dashboard />
                   </RequireAuth>
                 }
               />

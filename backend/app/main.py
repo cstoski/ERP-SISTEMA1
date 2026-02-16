@@ -13,6 +13,8 @@ from .routes import (
     produto_servico,
     despesa_projeto,
     templates,
+    system,
+    status,
 )
 from fastapi import Depends
 from .config import settings
@@ -96,6 +98,10 @@ app.include_router(
     templates.router,
     prefix="/api/templates",
     tags=["Templates"],
+)
+app.include_router(system.router, prefix="/api", tags=["System"])
+app.include_router(
+    status.router, prefix="/api", tags=["Status"]
 )
 
 

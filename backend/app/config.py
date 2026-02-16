@@ -8,8 +8,11 @@ class Settings(BaseSettings):
     # Ambiente: development, production
     ENVIRONMENT: str = Field(default="development", validation_alias="ENVIRONMENT")
     
-    # Database
-    DATABASE_URL: str = "sqlite:///./erp.db"
+    # Database - URLs específicas por ambiente
+    DATABASE_URL_DEV: str = Field(default="sqlite:///./erp_dev.db", validation_alias="DATABASE_URL_DEV")
+    DATABASE_URL_PROD: str = Field(default="sqlite:///./erp_prod.db", validation_alias="DATABASE_URL_PROD")
+    # DATABASE_URL: Usado como fallback ou override manual
+    DATABASE_URL: str = Field(default="", validation_alias="DATABASE_URL")
     
     # Security
     SECRET_KEY: str = Field(default="seu-secret-key-aqui-altere-em-producao", validation_alias="SECRET_KEY")
@@ -45,6 +48,21 @@ class Settings(BaseSettings):
     LOCAL_TEMPLATES_PATH: str = Field(default="templates", validation_alias="LOCAL_TEMPLATES_PATH")
     
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    
+    def get_database_url(self) -> str:
+        """
+        Retorna a URL do banco de dados baseada no ambiente.
+        Prioridade: DATABASE_URL (manual) > DATABASE_URL_PROD/DEV (por ambiente)
+        """
+        # Se DATABASE_URL foi explicitamente definido, usa ele (override manual)
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        
+        # Caso contrário, seleciona baseado no ambiente
+        if self.is_production():
+            return self.DATABASE_URL_PROD
+        else:
+            return self.DATABASE_URL_DEV
     
     def get_allowed_origins(self) -> list:
         """Retorna lista de origens permitidas para CORS"""

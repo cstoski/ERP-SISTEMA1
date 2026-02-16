@@ -239,7 +239,7 @@ const ProdutoServicoDetalhes: React.FC = () => {
           
           {produto.fornecedores && produto.fornecedores.length > 0 && (
             <div style={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
               padding: '0.75rem',
               borderRadius: '0.5rem',
               marginBottom: '1.5rem',
@@ -523,7 +523,7 @@ const ProdutoServicoDetalhes: React.FC = () => {
                 }}>
                   <div style={{ marginBottom: '0.5rem' }}>
                     <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Preço Base (do fornecedor):</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#4e73df' }}>{formatCurrency(detalhamento.precoBase)}</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#1e293b' }}>{formatCurrency(detalhamento.precoBase)}</div>
                   </div>
                 </div>
 
