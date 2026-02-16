@@ -9,13 +9,14 @@ Sistema ERP profissional desenvolvido com FastAPI (backend) e React + TypeScript
 ## 📋 Índice
 
 - [Recursos](#-recursos)
-- [Tecnologias](#-tecnologias)
 - [Setup Rápido](#-setup-rápido)
-- [Desenvolvimento](#-desenvolvimento)
-- [Testes](#-testes)
-- [Docker](#-docker)
-- [Produção](#-produção)
-- [Contribuindo](#-contribuindo)
+- [Credenciais Padrão](#-credenciais-padrão)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [URLs de Desenvolvimento](#-urls-de-desenvolvimento)
+- [Scripts Úteis](#️-scripts-úteis)
+- [Banco de Dados](#-banco-de-dados)
+- [Troubleshooting](#-troubleshooting)
+- [Documentação Adicional](#-documentação-adicional)
 
 ## ✨ Recursos
 
@@ -49,16 +50,19 @@ Sistema ERP profissional desenvolvido com FastAPI (backend) e React + TypeScript
 Basta executar um dos scripts:
 
 **PowerShell (recomendado):**
+
 ```powershell
 .\start-app.ps1
 ```
 
 **Command Prompt (.bat):**
+
 ```cmd
 start-app.bat
 ```
 
 Isso irá:
+
 1. Abrir dois terminais (backend e frontend)
 2. Ativar o ambiente virtual
 3. Iniciar os servidores
@@ -83,8 +87,8 @@ npm run dev
 
 #### 3️⃣ Acesse
 
-- **Aplicação:** http://localhost:5173
-- **API Docs:** http://localhost:8000/api/docs
+- **Aplicação:** <http://localhost:5173>
+- **API Docs:** <http://localhost:8000/api/docs>
 - **Login:** `admin` / `admin123`
 
 ### Pré-requisitos
@@ -130,18 +134,20 @@ docker-compose up -d
 ## 🔐 Credenciais Padrão
 
 ### Usuário Admin
+
 - **Login:** `admin`
 - **Senha:** `admin123`
 - **Email:** `admin@system.com`
 
 ### Usuário Comum
+
 - **Login:** `user`
 - **Senha:** `user123`
 - **Email:** `user@system.com`
 
 ## 📚 Estrutura do Projeto
 
-```
+```text
 ├── .github/
 │   └── workflows/
 │       └── ci.yml           # Pipeline CI/CD
@@ -200,9 +206,9 @@ docker-compose up -d
 
 ## 🔗 URLs de Desenvolvimento
 
-- **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **API Docs (Swagger):** http://localhost:8000/docs
+- **Frontend:** <http://localhost:5173>
+- **Backend API:** <http://localhost:8000>
+- **API Docs (Swagger):** <http://localhost:8000/docs>
 - **Framework:** FastAPI 0.115+
 - **ORM:** SQLAlchemy 2.0+
 - **Database:** PostgreSQL 13+ (produção), SQLite (dev)
@@ -214,6 +220,7 @@ docker-compose up -d
 - **ASGI Server:** Uvicorn
 
 ### Frontend
+
 - **Framework:** React 18
 - **Language:** TypeScript 5+
 - **Build Tool:** Vite 7+
@@ -222,6 +229,7 @@ docker-compose up -d
 - **HTTP Client:** Axios
 - **Charts:** Chart.js + react-chartjs-2
 - **Forms:** React Hook Form (potencial)
+
 Este projeto usa **Make** para simplificar comandos. Veja todos com:
 
 ```bash
@@ -269,7 +277,10 @@ make logs-backend    # Tail logs backend
 make logs-errors     # Tail logs de erro
 ```
 
-### Comandos Manuais (sem Make)Ops
+### Comandos Manuais (sem Make)
+
+### DevOps
+
 - **Containers:** Docker + Docker Compose
 - **CI/CD:** GitHub Actions
 - **Monitoring:** Health checks integrados
@@ -307,7 +318,7 @@ python -m alembic downgrade -1
 python -m alembic history
 ```
 
-### Frontend
+### Scripts Frontend
 
 ```bash
 # Servidor de desenvolvimento
@@ -374,16 +385,19 @@ LOGO_PATH=./public/assets/images/illustrations/takt_menor.jpg
 ## 🐛 Troubleshooting
 
 ### Erro de conexão com banco de dados
+
 - Verifique se o PostgreSQL está rodando
 - Confirme usuário/senha no DATABASE_URL
 - Verifique se o banco `erp_sistema` existe
 
 ### Frontend não conecta com backend
-- Verifique se o backend está rodando em http://localhost:8000
+
+- Verifique se o backend está rodando em <http://localhost:8000>
 - Confirme as configurações de CORS no .env
 - Verifique a URL da API no arquivo `frontend/src/config.ts`
 
 ### Erro nas migrações
+
 - Verifique se todas as dependências estão instaladas
 - Confirme conexão com banco
 - Execute: `python -m alembic upgrade head`

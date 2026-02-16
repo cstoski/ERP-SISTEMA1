@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-02-16
 
 ### Added
+
 - Sistema completo de autenticação JWT
 - Gestão de Pessoas Jurídicas (CRUD completo)
 - Gestão de Contatos vinculados a empresas
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentação completa
 
 ### Security
+
 - Senhas hasheadas com Argon2
 - JWT tokens com expiração configurável
 - CORS configurável por ambiente
@@ -34,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - Testes para frontend (Jest + Testing Library)
 - Sistema de notificações
 - Relatórios em PDF

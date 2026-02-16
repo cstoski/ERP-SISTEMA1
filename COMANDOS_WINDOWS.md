@@ -92,6 +92,7 @@ npm run dev
 ### Executar Ambos (2 terminais)
 
 **Terminal 1 (Backend):**
+
 ```powershell
 cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 ..\\.venv\Scripts\Activate.ps1
@@ -99,6 +100,7 @@ uvicorn app.main:app --reload
 ```
 
 **Terminal 2 (Frontend):**
+
 ```powershell
 cd D:\PROJETOS\TAKT\ERP-SISTEMA\frontend
 npm run dev
@@ -561,6 +563,7 @@ npm install
 ### Desenvolvimento diário
 
 **Terminal 1 - Backend:**
+
 ```powershell
 cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 ..\\.venv\Scripts\Activate.ps1
@@ -568,6 +571,7 @@ uvicorn app.main:app --reload
 ```
 
 **Terminal 2 - Frontend:**
+
 ```powershell
 cd D:\PROJETOS\TAKT\ERP-SISTEMA\frontend
 npm run dev

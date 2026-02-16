@@ -69,7 +69,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### Executar a Aplicação
 
 | Preciso... | Documento |
-|-----------|-----------|
+| ---------- | --------- |
 | Rodar o projeto AGORA | [Quick Start](./QUICK_START.md) |
 | Configurar ambiente pela primeira vez | [Guia de Desenvolvimento - Configuração Inicial](./GUIA_DESENVOLVIMENTO.md#configuração-inicial) |
 | Ver todos os comandos Windows | [Comandos Windows](./COMANDOS_WINDOWS.md) |
@@ -78,7 +78,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### Desenvolvimento
 
 | Preciso... | Documento |
-|-----------|-----------|
+| ---------- | --------- |
 | Formatar código | [Comandos Windows - Formatação](./COMANDOS_WINDOWS.md#-formatação-e-linting) |
 | Executar testes | [Comandos Windows - Testes](./COMANDOS_WINDOWS.md#-testes) |
 | Criar migração do banco | [Comandos Windows - Banco de Dados](./COMANDOS_WINDOWS.md#-banco-de-dados) |
@@ -88,7 +88,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### Problemas
 
 | Problema | Solução |
-|----------|---------|
+| -------- | ------- |
 | Erro de conexão com banco | [Guia de Desenvolvimento - Problemas](./GUIA_DESENVOLVIMENTO.md#-solução-de-problemas) |
 | Porta 8000 em uso | [Quick Start - Problemas Comuns](./QUICK_START.md#-problemas-comuns) |
 | Ambiente virtual não ativa | [Comandos Windows - Ambiente Virtual](./COMANDOS_WINDOWS.md#-ambiente-virtual) |
@@ -97,7 +97,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### Contribuindo
 
 | Preciso... | Documento |
-|-----------|-----------|
+| ---------- | --------- |
 | Enviar uma contribuição | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Entender padrões de código | [CONTRIBUTING.md - Padrões](./CONTRIBUTING.md) |
 | Criar um commit | [CONTRIBUTING.md - Commits](./CONTRIBUTING.md) |
@@ -105,7 +105,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### Entendendo o Sistema
 
 | Preciso... | Documento |
-|-----------|-----------|
+| ---------- | --------- |
 | Entender regras de validação | [Regras de Negócio](./REGRAS_NEGOCIO.md) |
 | Ver estrutura dos modelos | [Regras de Negócio](./REGRAS_NEGOCIO.md) |
 | Entender workflows (status) | [Regras de Negócio - Workflows](./REGRAS_NEGOCIO.md) |
@@ -122,6 +122,7 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
   - User: `user` / `user123`
 
 - **[Gerar SECRET_KEY](./COMANDOS_WINDOWS.md#gerar-secret_key)**
+
   ```powershell
   python -c "import secrets; print(secrets.token_urlsafe(64))"
   ```
@@ -129,11 +130,11 @@ Central de documentação do projeto. Encontre rapidamente o guia que você prec
 ### URLs Importantes
 
 | Serviço | URL | Documento |
-|---------|-----|-----------|
-| Frontend | http://localhost:5173 | [Quick Start](./QUICK_START.md) |
-| Backend API | http://localhost:8000 | [Quick Start](./QUICK_START.md) |
-| Swagger Docs | http://localhost:8000/api/docs | [Guia](./GUIA_DESENVOLVIMENTO.md#acessar-a-aplicação) |
-| Health Check | http://localhost:8000/health | [Guia](./GUIA_DESENVOLVIMENTO.md#acessar-a-aplicação) |
+| ------- | --- | --------- |
+| Frontend | <http://localhost:5173> | [Quick Start](./QUICK_START.md) |
+| Backend API | <http://localhost:8000> | [Quick Start](./QUICK_START.md) |
+| Swagger Docs | <http://localhost:8000/api/docs> | [Guia](./GUIA_DESENVOLVIMENTO.md#acessar-a-aplicação) |
+| Health Check | <http://localhost:8000/health> | [Guia](./GUIA_DESENVOLVIMENTO.md#acessar-a-aplicação) |
 
 ### Configuração
 
@@ -218,7 +219,7 @@ black app tests
 
 ### Fluxo Recomendado para Iniciantes
 
-```
+```text
 1. Leia o README.md (5 min)
    ↓
 2. Siga o Quick Start (5 min)

@@ -4,14 +4,14 @@ Este guia contém todas as instruções necessárias para configurar e executar 
 
 ## 📋 Índice
 
-- [Pré-requisitos](#pré-requisitos)
-- [Configuração Inicial](#configuração-inicial)
-- [Executando a Aplicação](#executando-a-aplicação)
-- [Comandos Úteis](#comandos-úteis)
-- [Testes](#testes)
-- [Formatação e Linting](#formatação-e-linting)
-- [Banco de Dados](#banco-de-dados)
-- [Solução de Problemas](#solução-de-problemas)
+- [Pré-requisitos](#-pré-requisitos)
+- [Configuração Inicial](#️-configuração-inicial)
+- [Executando a Aplicação](#-executando-a-aplicação)
+- [Comandos Úteis](#️-comandos-úteis)
+- [Testes](#-testes)
+- [Formatação e Linting](#-formatação-e-linting)
+- [Banco de Dados](#-banco-de-dados)
+- [Solução de Problemas](#-solução-de-problemas)
 
 ---
 
@@ -118,6 +118,7 @@ python seed_users.py
 ```
 
 Isso criará dois usuários:
+
 - **Admin:** username: `admin`, password: `admin123`
 - **User:** username: `user`, password: `user123`
 
@@ -151,7 +152,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Saída esperada:**
-```
+
+```text
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     Started reloader process
 INFO:     Started server process
@@ -170,7 +172,8 @@ npm run dev
 ```
 
 **Saída esperada:**
-```
+
+```text
   VITE v7.x.x  ready in xxx ms
 
   ➜  Local:   http://localhost:5173/
@@ -179,11 +182,11 @@ npm run dev
 
 ### Acessar a Aplicação
 
-- **Frontend (aplicação web):** http://localhost:5173
-- **Backend (API):** http://localhost:8000
-- **Documentação Swagger:** http://localhost:8000/api/docs
-- **ReDoc (documentação alternativa):** http://localhost:8000/api/redoc
-- **Health Check:** http://localhost:8000/health
+- **Frontend (aplicação web):** <http://localhost:5173>
+- **Backend (API):** <http://localhost:8000>
+- **Documentação Swagger:** <http://localhost:8000/api/docs>
+- **ReDoc (documentação alternativa):** <http://localhost:8000/api/redoc>
+- **Health Check:** <http://localhost:8000/health>
 
 ### Login Inicial
 
@@ -411,6 +414,7 @@ docker-compose up --build
 **Problema:** Ambiente virtual não está ativo ou não está na pasta correta.
 
 **Solução:**
+
 ```powershell
 cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 ..\\.venv\Scripts\Activate.ps1
@@ -421,6 +425,7 @@ cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 **Problema:** PostgreSQL não está rodando ou credenciais incorretas.
 
 **Solução:**
+
 1. Verifique se o PostgreSQL está rodando
 2. Confirme o usuário e senha no arquivo `.env`
 3. Teste a conexão: `psql -U postgres -d erp_sistema`
@@ -430,6 +435,7 @@ cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 **Problema:** Já existe um processo usando a porta 8000.
 
 **Solução:**
+
 ```powershell
 # Encontrar processo usando a porta
 netstat -ano | findstr :8000
@@ -450,6 +456,7 @@ uvicorn app.main:app --reload --port 8001
 **Problema:** CORS ou URL incorreta.
 
 **Solução:**
+
 1. Verifique se o backend está rodando em `http://localhost:8000`
 2. Confirme que `ALLOWED_ORIGINS` no `.env` inclui `http://localhost:5173`
 3. Verifique a URL da API em `frontend/src/config.ts`
@@ -459,6 +466,7 @@ uvicorn app.main:app --reload --port 8001
 **Problema:** Incompatibilidade de versões ou falta de compiladores.
 
 **Solução:**
+
 ```powershell
 # Atualizar pip
 python -m pip install --upgrade pip
@@ -483,6 +491,7 @@ pip install "psycopg[binary]>=3.2.13"
 ### Tecnologias Utilizadas
 
 **Backend:**
+
 - FastAPI 0.115.0 - Framework web moderno
 - SQLAlchemy 2.0.36 - ORM para banco de dados
 - Alembic 1.13.1 - Migrações de banco de dados
@@ -492,6 +501,7 @@ pip install "psycopg[binary]>=3.2.13"
 - Uvicorn 0.32.0 - Servidor ASGI
 
 **Frontend:**
+
 - React 18 - Biblioteca UI
 - TypeScript 5 - Superset tipado do JavaScript
 - Vite 7 - Build tool e dev server
@@ -500,6 +510,7 @@ pip install "psycopg[binary]>=3.2.13"
 - Axios - Cliente HTTP
 
 **Banco de Dados:**
+
 - PostgreSQL 13+ - Banco de dados relacional
 
 ---
@@ -521,6 +532,7 @@ pip install "psycopg[binary]>=3.2.13"
 Para produção, você deve:
 
 1. Gerar uma nova `SECRET_KEY`:
+
    ```python
    import secrets
    print(secrets.token_urlsafe(64))
@@ -540,7 +552,7 @@ Para produção, você deve:
 
 Se encontrar problemas:
 
-1. Consulte a seção [Solução de Problemas](#solução-de-problemas)
+1. Consulte a seção [Solução de Problemas](#-solução-de-problemas)
 2. Verifique os logs em `backend/logs/`
 3. Execute os testes: `pytest tests/ -v`
 4. Abra uma issue no repositório
@@ -557,7 +569,7 @@ Antes de começar a desenvolver, certifique-se de que:
 - [ ] Usuários de teste foram criados (`python seed_users.py`)
 - [ ] Backend está rodando (`uvicorn app.main:app --reload`)
 - [ ] Frontend está rodando (`npm run dev`)
-- [ ] Consegue acessar http://localhost:5173
+- [ ] Consegue acessar <http://localhost:5173>
 - [ ] Consegue fazer login com admin/admin123
 - [ ] Testes estão passando (`pytest tests/`)
 

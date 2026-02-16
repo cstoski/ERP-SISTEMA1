@@ -8,12 +8,14 @@ Obrigado por considerar contribuir para o ERP Sistema!
 
 1. Fork o repositório
 2. Clone seu fork:
+
    ```bash
    git clone https://github.com/seu-usuario/ERP-SISTEMA.git
    cd ERP-SISTEMA
    ```
 
 3. Instale as dependências:
+
    ```bash
    make install
    # ou manualmente:
@@ -24,19 +26,23 @@ Obrigado por considerar contribuir para o ERP Sistema!
 ### Padrões de Código
 
 #### Backend (Python)
+
 - Use **Black** para formatação (max 100 chars/linha)
 - Use **Flake8** para linting
 - Use **isort** para ordenar imports
 - Execute antes de commitar:
+
   ```bash
   make format-backend
   make lint-backend
   ```
 
 #### Frontend (TypeScript/React)
+
 - Use **Prettier** para formatação
 - Use **ESLint** para linting
 - Execute antes de commitar:
+
   ```bash
   make format-frontend
   make lint-frontend
@@ -45,6 +51,7 @@ Obrigado por considerar contribuir para o ERP Sistema!
 ### Workflow de Desenvolvimento
 
 1. Crie uma branch para sua feature:
+
    ```bash
    git checkout -b feature/minha-feature
    ```
@@ -52,16 +59,19 @@ Obrigado por considerar contribuir para o ERP Sistema!
 2. Faça suas alterações
 
 3. Execute os testes:
+
    ```bash
    make test
    ```
 
 4. Commit suas mudanças:
+
    ```bash
    git commit -m "feat: adiciona nova funcionalidade X"
    ```
 
 5. Push para seu fork:
+
    ```bash
    git push origin feature/minha-feature
    ```
@@ -89,6 +99,7 @@ Seguimos o padrão [Conventional Commits](https://www.conventionalcommits.org/):
 ### Code Review
 
 Todo PR passa por code review. Certifique-se de:
+
 - [ ] Código formatado corretamente
 - [ ] Testes passando
 - [ ] Documentação atualizada

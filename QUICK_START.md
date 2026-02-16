@@ -21,8 +21,8 @@ npm run dev
 
 ### 3️⃣ Acessar
 
-- **Aplicação:** http://localhost:5173
-- **API Docs:** http://localhost:8000/api/docs
+- **Aplicação:** <http://localhost:5173>
+- **API Docs:** <http://localhost:8000/api/docs>
 
 ### 🔑 Login
 
@@ -102,6 +102,7 @@ cd D:\PROJETOS\TAKT\ERP-SISTEMA\backend
 ## 📚 Documentação Completa
 
 Para informações detalhadas, consulte:
+
 - [GUIA_DESENVOLVIMENTO.md](./GUIA_DESENVOLVIMENTO.md) - Guia completo
 - [COMANDOS_WINDOWS.md](./COMANDOS_WINDOWS.md) - Todos os comandos PowerShell
 - [README.md](./README.md) - Visão geral do projeto
