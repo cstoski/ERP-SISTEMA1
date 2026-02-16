@@ -5,6 +5,7 @@ from sqlalchemy import and_, func
 from typing import List
 from datetime import datetime
 import os
+import logging
 from decimal import Decimal
 from io import BytesIO
 
@@ -17,6 +18,8 @@ from ..models.cronograma import Cronograma as CronogramaModel, CronogramaHistori
 from ..models.user import User as UserModel
 from ..config import settings, get_local_now
 from ..schemas.projeto import Projeto, ProjetoCreate, ProjetoUpdate
+from ..onedrive_service import onedrive_service
+from ..local_storage_service import local_storage_service
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from reportlab.lib.pagesizes import A4
@@ -27,6 +30,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from .auth import get_current_user
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def gerar_numero_projeto(db: Session, numero_manual: str = None) -> str:
@@ -605,12 +609,44 @@ def criar_projeto(projeto: ProjetoCreate, db: Session = Depends(get_db)):
         numero = gerar_numero_projeto(db, projeto.numero)
         
         db_projeto = ProjetoModel(
-            **projeto.model_dump(exclude={'numero'}),
+            **projeto.model_dump(exclude={'numero', 'template_opcao'}),
             numero=numero
         )
         db.add(db_projeto)
         db.commit()
         db.refresh(db_projeto)
+        
+        # Criar estrutura de pastas (OneDrive e/ou Local Storage)
+        try:
+            # Busca o cliente para obter a sigla
+            cliente = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.id == db_projeto.cliente_id).first()
+            if cliente:
+                # OneDrive
+                if settings.ONEDRIVE_ENABLED:
+                    try:
+                        onedrive_service.create_project_structure(
+                            project_number=db_projeto.numero,
+                            project_name=db_projeto.nome,
+                            client_sigla=cliente.sigla
+                        )
+                    except Exception as e:
+                        print(f"Aviso: Erro ao criar pastas no OneDrive: {str(e)}")
+                
+                # Local Storage
+                if settings.LOCAL_STORAGE_ENABLED:
+                    try:
+                        local_storage_service.create_project_structure(
+                            project_number=db_projeto.numero,
+                            project_name=db_projeto.nome,
+                            client_sigla=cliente.sigla,
+                            template_opcao=projeto.template_opcao or "Completa"
+                        )
+                    except Exception as e:
+                        print(f"Aviso: Erro ao criar pastas localmente: {str(e)}")
+        except Exception as e:
+            # Log do erro mas não falha a criação do projeto
+            print(f"Aviso: Erro geral ao criar estrutura de pastas: {str(e)}")
+        
         return db_projeto
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -685,6 +721,42 @@ def atualizar_projeto(
     db.add(db_projeto)
     db.commit()
     db.refresh(db_projeto)
+    
+    # Movimentar pastas conforme mudança de status
+    if status_novo != status_anterior and settings.LOCAL_STORAGE_ENABLED:
+        try:
+            # Busca o cliente para obter a sigla
+            cliente = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.id == db_projeto.cliente_id).first()
+            if cliente:
+                # Se mudou para "Em Execução", move para "Projetos Ativos"
+                if status_novo == "Em Execução":
+                    local_storage_service.move_project_folder(
+                        project_number=db_projeto.numero,
+                        project_name=db_projeto.nome,
+                        client_sigla=cliente.sigla,
+                        destination="Projetos Ativos"
+                    )
+                    logger.info(f"Pasta do projeto {db_projeto.numero} movida para Projetos Ativos")
+                
+                # Se mudou para "Concluído", move para "Projetos Finalizados"
+                elif status_novo == "Concluído":
+                    local_storage_service.move_project_folder(
+                        project_number=db_projeto.numero,
+                        project_name=db_projeto.nome,
+                        client_sigla=cliente.sigla,
+                        destination="Projetos Finalizados"
+                    )
+                    logger.info(f"Pasta do projeto {db_projeto.numero} movida para Projetos Finalizados")
+                else:
+                    local_storage_service.move_project_folder(
+                        project_number=db_projeto.numero,
+                        project_name=db_projeto.nome,
+                        client_sigla=cliente.sigla,
+                        destination="PROSPECTADOS"
+                    )
+                    logger.info(f"Pasta do projeto {db_projeto.numero} movida para Projetos Prospectados")
+        except Exception as e:
+            logger.error(f"Erro ao mover pasta do projeto: {str(e)}")
     
     # Se o projeto foi marcado como concluído, atualizar o cronograma
     if status_novo == "Concluído" and status_anterior != "Concluído":
@@ -767,6 +839,28 @@ def deletar_projeto(projeto_id: int, db: Session = Depends(get_db)):
     if not db_projeto:
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
     
+    # Verificar se o projeto pode ser excluído (apenas se estiver em Orçando)
+    if db_projeto.status != StatusProjeto.ORCANDO:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Não é possível excluir projeto com status '{db_projeto.status}'. Apenas projetos com status 'Orçando' podem ser excluídos."
+        )
+    
+    # Excluir pasta do projeto se Local Storage estiver habilitado
+    if settings.LOCAL_STORAGE_ENABLED:
+        try:
+            # Busca o cliente para obter a sigla
+            cliente = db.query(PessoaJuridicaModel).filter(PessoaJuridicaModel.id == db_projeto.cliente_id).first()
+            if cliente:
+                local_storage_service.delete_project_folder(
+                    project_number=db_projeto.numero,
+                    project_name=db_projeto.nome,
+                    client_sigla=cliente.sigla
+                )
+                logger.info(f"Pasta do projeto {db_projeto.numero} excluída")
+        except Exception as e:
+            logger.error(f"Erro ao excluir pasta do projeto: {str(e)}")
+
     db.delete(db_projeto)
     db.commit()
     return db_projeto

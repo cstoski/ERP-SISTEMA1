@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Numeric, Text, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 
 from ..database import Base
@@ -16,7 +16,10 @@ class Cronograma(Base):
     atualizado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Relacionamentos
-    projeto = relationship("Projeto", backref="cronograma")
+    projeto = relationship(
+        "Projeto",
+        backref=backref("cronograma", cascade="all, delete-orphan", uselist=False)
+    )
     atualizado_por = relationship("User")
     historico = relationship("CronogramaHistorico", back_populates="cronograma", cascade="all, delete-orphan", order_by="desc(CronogramaHistorico.criado_em)")
 

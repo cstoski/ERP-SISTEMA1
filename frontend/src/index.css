@@ -882,6 +882,10 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator:hover {
   margin-bottom: 1.5rem;
 }
 
+.form-grid.single-column {
+  grid-template-columns: 1fr;
+}
+
 .form-group .form-grid {
   margin-bottom: 0;
 }

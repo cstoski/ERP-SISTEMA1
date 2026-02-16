@@ -31,6 +31,19 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = Field(default="http://localhost:5174", validation_alias="FRONTEND_URL")
     LOGO_PATH: str = Field(default="", validation_alias="LOGO_PATH")
     
+    # OneDrive Integration
+    ONEDRIVE_ENABLED: bool = Field(default=False, validation_alias="ONEDRIVE_ENABLED")
+    ONEDRIVE_CLIENT_ID: str = Field(default="", validation_alias="ONEDRIVE_CLIENT_ID")
+    ONEDRIVE_CLIENT_SECRET: str = Field(default="", validation_alias="ONEDRIVE_CLIENT_SECRET")
+    ONEDRIVE_TENANT_ID: str = Field(default="", validation_alias="ONEDRIVE_TENANT_ID")
+    ONEDRIVE_USER_EMAIL: str = Field(default="", validation_alias="ONEDRIVE_USER_EMAIL")
+    ONEDRIVE_ROOT_FOLDER: str = Field(default="ERP_PROJETOS", validation_alias="ONEDRIVE_ROOT_FOLDER")
+    
+    # Local Storage (alternativa ao OneDrive para testes)
+    LOCAL_STORAGE_ENABLED: bool = Field(default=False, validation_alias="LOCAL_STORAGE_ENABLED")
+    LOCAL_STORAGE_ROOT_PATH: str = Field(default="", validation_alias="LOCAL_STORAGE_ROOT_PATH")
+    LOCAL_TEMPLATES_PATH: str = Field(default="templates", validation_alias="LOCAL_TEMPLATES_PATH")
+    
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     
     def get_allowed_origins(self) -> list:

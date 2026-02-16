@@ -56,6 +56,8 @@ const Projetos: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+  const [isDeleteErrorOpen, setIsDeleteErrorOpen] = useState<boolean>(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string>('');
   const [faturamentoTotalProjeto, setFaturamentoTotalProjeto] = useState<number>(0);
   const [faturamentosProjeto, setFaturamentosProjeto] = useState<any[]>([]);
   const [cronograma, setCronograma] = useState<any | null>(null);
@@ -171,7 +173,9 @@ const Projetos: React.FC = () => {
         setProjetos(projetos.filter(p => p.id !== projeto.id));
       } catch (err) {
         console.error('Falha ao excluir:', err);
-        alert('Não foi possível excluir o projeto.');
+        const apiMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+        setDeleteErrorMessage(apiMessage || 'Não foi possível excluir o projeto.');
+        setIsDeleteErrorOpen(true);
       }
     }
   };
@@ -644,6 +648,19 @@ const Projetos: React.FC = () => {
             )}
           </>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteErrorOpen}
+        onClose={() => setIsDeleteErrorOpen(false)}
+        title="Erro ao excluir"
+      >
+        <p>{deleteErrorMessage}</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+          <button className="btn btn-primary" onClick={() => setIsDeleteErrorOpen(false)}>
+            OK
+          </button>
+        </div>
       </Modal>
     </>
   );

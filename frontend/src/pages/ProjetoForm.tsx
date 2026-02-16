@@ -104,6 +104,9 @@ const ProjetoForm: React.FC = () => {
     data_pedido_compra: '',
     status: 'Orçando',
   });
+  const [valorOrcadoInput, setValorOrcadoInput] = useState<string>('');
+  const [valorVendaInput, setValorVendaInput] = useState<string>('');
+  const [templateOpcao, setTemplateOpcao] = useState<string>('Completa');
 
   useEffect(() => {
     carregarEmpresas();
@@ -168,6 +171,8 @@ const ProjetoForm: React.FC = () => {
         ...projeto,
         data_pedido_compra: formatDataPedidoCompra(projeto.data_pedido_compra),
       });
+      setValorOrcadoInput(projeto.valor_orcado ? formatNumberBR(projeto.valor_orcado) : '');
+      setValorVendaInput(projeto.valor_venda ? formatNumberBR(projeto.valor_venda) : '');
     } catch (err) {
       console.error('Erro ao carregar projeto:', err);
       alert('Erro ao carregar projeto');
@@ -213,6 +218,11 @@ const ProjetoForm: React.FC = () => {
     
     let processedValue: any = value;
     if (name === 'valor_orcado' || name === 'valor_venda') {
+      if (name === 'valor_orcado') {
+        setValorOrcadoInput(value);
+      } else {
+        setValorVendaInput(value);
+      }
       processedValue = parseNumberBR(value);
     } else if (name === 'cliente_id' || name === 'contato_id' || name === 'prazo_entrega_dias') {
       processedValue = parseInt(value) || 0;
@@ -261,6 +271,7 @@ const ProjetoForm: React.FC = () => {
       if (isEditMode && id) {
         await projetoService.atualizar(parseInt(id), payload);
       } else {
+        payload.template_opcao = templateOpcao;
         await projetoService.criar(payload);
       }
       navigate('/projetos');
@@ -333,6 +344,44 @@ const ProjetoForm: React.FC = () => {
                 </select>
                 {errors.status && <span className="error-message">{errors.status}</span>}
               </div>
+
+              {!isEditMode && (
+                <div className="form-group">
+                  <label>Tipo de Proposta *</label>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <input
+                        type="radio"
+                        name="template_opcao"
+                        value="Completa"
+                        checked={templateOpcao === 'Completa'}
+                        onChange={(e) => setTemplateOpcao(e.target.value)}
+                      />
+                      Completa
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <input
+                        type="radio"
+                        name="template_opcao"
+                        value="Simplificada"
+                        checked={templateOpcao === 'Simplificada'}
+                        onChange={(e) => setTemplateOpcao(e.target.value)}
+                      />
+                      Simplificada
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <input
+                        type="radio"
+                        name="template_opcao"
+                        value="Visita"
+                        checked={templateOpcao === 'Visita'}
+                        onChange={(e) => setTemplateOpcao(e.target.value)}
+                      />
+                      Visita
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="form-grid">
@@ -416,7 +465,7 @@ const ProjetoForm: React.FC = () => {
                   name="valor_orcado"
                   placeholder="0,00"
                   className={`form-input ${errors.valor_orcado ? 'input-error' : ''}`}
-                  value={formData.valor_orcado === 0 ? '' : formatNumberBR(formData.valor_orcado)}
+                  value={valorOrcadoInput}
                   onChange={handleChange}
                 />
                 {errors.valor_orcado && <span className="error-message">{errors.valor_orcado}</span>}
@@ -432,7 +481,7 @@ const ProjetoForm: React.FC = () => {
                   name="valor_venda"
                   placeholder="0,00"
                   className={`form-input ${errors.valor_venda ? 'input-error' : ''}`}
-                  value={formData.valor_venda === 0 ? '' : formatNumberBR(formData.valor_venda)}
+                  value={valorVendaInput}
                   onChange={handleChange}
                 />
                 {errors.valor_venda && <span className="error-message">{errors.valor_venda}</span>}

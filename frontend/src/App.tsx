@@ -27,6 +27,7 @@ import DespesasProjetos from './pages/DespesasProjetos';
 import DespesaProjetoForm from './pages/DespesaProjetoForm';
 import AlterarSenha from './pages/AlterarSenha';
 import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
+import Configuracoes from './pages/Configuracoes';
 import NotFound from './pages/NotFound';
 
 const AppContent: React.FC = () => {
@@ -266,6 +267,10 @@ const AppContent: React.FC = () => {
                     <GerenciamentoUsuarios />
                   </RequireAuth>
                 }
+              />
+              <Route
+                path="/configuracoes"
+                element={<Configuracoes />}
               />
               <Route path="*" element={<NotFound />} />
             </Routes>

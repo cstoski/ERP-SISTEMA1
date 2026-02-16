@@ -12,6 +12,7 @@ from .routes import (
     cronograma,
     produto_servico,
     despesa_projeto,
+    templates,
 )
 from fastapi import Depends
 from .config import settings
@@ -91,6 +92,11 @@ app.include_router(
     dependencies=[Depends(auth.get_current_user)],
 )
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(
+    templates.router,
+    prefix="/api/templates",
+    tags=["Templates"],
+)
 
 
 @app.get("/")

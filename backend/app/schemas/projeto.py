@@ -14,6 +14,12 @@ VALID_STATUS = [
     "Concluído"
 ]
 
+VALID_TEMPLATE_OPTIONS = [
+    "Completa",
+    "Simplificada",
+    "Visita"
+]
+
 class ProjetoBase(BaseModel):
     numero: str
     cliente_id: int
@@ -34,7 +40,16 @@ class ProjetoBase(BaseModel):
         return v
 
 class ProjetoCreate(ProjetoBase):
-    pass
+    template_opcao: Optional[str] = "Completa"
+
+    @field_validator('template_opcao')
+    @classmethod
+    def validate_template_opcao(cls, v):
+        if v is None:
+            return "Completa"
+        if v not in VALID_TEMPLATE_OPTIONS:
+            raise ValueError(f'Tipo de proposta deve ser um dos seguintes: {", ".join(VALID_TEMPLATE_OPTIONS)}')
+        return v
 
 class ProjetoUpdate(BaseModel):
     model_config = ConfigDict(extra='ignore')
