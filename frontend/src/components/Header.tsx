@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Função para obter o título da página com base no caminho da URL
 const getPageTitle = (pathname: string): string => {
@@ -11,7 +11,8 @@ const getPageTitle = (pathname: string): string => {
     { prefix: '/faturamentos', singular: 'Faturamento', plural: 'Faturamentos' },
   ];
 
-  if (pathname === '/') return 'Dashboard';
+  if (pathname === '/' || pathname === '/login') return 'Login';
+  if (pathname === '/dashboard') return 'Dashboard';
   if (pathname === '/usuarios') return 'Gerenciamento de Usuários';
   if (pathname === '/alterar-senha') return 'Meu Perfil';
   if (pathname === '/reset-senha') return 'Reset de Senha';
@@ -36,7 +37,15 @@ type HeaderProps = {
 
 const Header: React.FC<HeaderProps> = ({ isSidebarCollapsed, onToggleSidebar }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const title = getPageTitle(location.pathname);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('user_role');
+    navigate('/login');
+  };
 
   return (
     <header className="header">
@@ -71,12 +80,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarCollapsed, onToggleSidebar }) 
           <div className="user-avatar">{(localStorage.getItem('username') || 'U').charAt(0).toUpperCase()}</div>
           <button
             className="btn-logout"
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              localStorage.removeItem('username');
-              localStorage.removeItem('user_role');
-              window.location.href = '/login';
-            }}
+            onClick={handleLogout}
             title="Sair"
           >
             <svg

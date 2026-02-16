@@ -23,7 +23,7 @@ const LoginForm = ({ defaultCredential }: LoginFormProps) => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (

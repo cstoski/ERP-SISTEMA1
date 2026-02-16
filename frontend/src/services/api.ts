@@ -48,9 +48,10 @@ api.interceptors.response.use(
       localStorage.removeItem('username');
       localStorage.removeItem('user_role');
       console.log('[API] localStorage limpo');
-      if (currentPath !== '/login') {
-        console.log('[API] Redirecionando para /login?expired=1');
-        window.location.href = '/login?expired=1';
+      if (!currentPath.endsWith('/login')) {
+        console.log('[API] Redirecionando para login?expired=1');
+        const basePath = import.meta.env.BASE_URL || '/';
+        window.location.href = `${basePath}login?expired=1`;
       }
     }
     return Promise.reject(error);

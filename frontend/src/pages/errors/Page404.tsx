@@ -80,7 +80,7 @@ const Page404 = () => {
             while our bear is searching everywhere
           </Typography>
 
-          <Button variant="contained" href="/" size={upSm ? 'large' : 'medium'} sx={{ px: 7 }}>
+          <Button variant="contained" href="/dashboard" size={upSm ? 'large' : 'medium'} sx={{ px: 7 }}>
             Go Back Home{' '}
           </Button>
         </Box>

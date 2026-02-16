@@ -16,7 +16,7 @@ const GerenciamentoUsuarios: React.FC = () => {
   useEffect(() => {
     // Verificar se é admin
     if (userRole !== 'admin') {
-      navigate('/');
+      navigate('/dashboard');
       return;
     }
     carregarUsuarios();

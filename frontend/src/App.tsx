@@ -31,7 +31,7 @@ import NotFound from './pages/NotFound';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/reset-senha';
+  const isAuthPage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/reset-senha';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     const stored = localStorage.getItem('sidebar_collapsed');
     return stored === 'true';
@@ -55,11 +55,12 @@ const AppContent: React.FC = () => {
           )}
           <div className="page-content">
             <Routes>
+              <Route path="/" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/reset-senha" element={<ResetSenha />} />
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <RequireAuth>
                     <Home />
@@ -278,7 +279,7 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router basename="/erptakt">
       <AppContent />
     </Router>
   );
