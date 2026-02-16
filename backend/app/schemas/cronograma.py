@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
@@ -9,13 +9,12 @@ class CronogramaHistoricoBase(BaseModel):
     observacoes: Optional[str] = None
 
 class CronogramaHistorico(CronogramaHistoricoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     cronograma_id: int
     criado_em: datetime
     criado_por_id: Optional[int] = None
-
-    class Config:
-        from_attributes = True
 
 # Schema para cronograma
 class CronogramaBase(BaseModel):
@@ -30,17 +29,13 @@ class CronogramaUpdate(BaseModel):
     observacoes: Optional[str] = None
 
 class Cronograma(CronogramaBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     projeto_id: int
     atualizado_em: datetime
     atualizado_por_id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
-
 # Schema com histórico incluído
 class CronogramaComHistorico(Cronograma):
     historico: list[CronogramaHistorico] = []
-
-    class Config:
-        from_attributes = True

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -20,9 +20,8 @@ class FuncionarioUpdate(BaseModel):
     email: Optional[str] = None
 
 class Funcionario(FuncionarioBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     criado_em: Optional[datetime] = None
     atualizado_em: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True

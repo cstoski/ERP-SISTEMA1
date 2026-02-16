@@ -58,9 +58,8 @@ class ProjetoUpdate(BaseModel):
         return v
 
 class Projeto(ProjetoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     criado_em: datetime
     atualizado_em: datetime
-
-    class Config:
-        from_attributes = True

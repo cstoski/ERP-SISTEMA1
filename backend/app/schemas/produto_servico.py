@@ -5,13 +5,12 @@ from datetime import datetime
 
 
 class FornecedorResumo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     razao_social: str
     nome_fantasia: Optional[str] = None
     tipo: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 class ProdutoServicoFornecedorBase(BaseModel):
@@ -35,11 +34,10 @@ class ProdutoServicoFornecedorCreate(ProdutoServicoFornecedorBase):
 
 
 class ProdutoServicoFornecedor(ProdutoServicoFornecedorBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     fornecedor: Optional[FornecedorResumo] = None
-
-    class Config:
-        from_attributes = True
 
 
 class ProdutoServicoBase(BaseModel):
@@ -75,14 +73,13 @@ class ProdutoServicoUpdate(BaseModel):
 
 
 class ProdutoServico(ProdutoServicoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     codigo_interno: str
     criado_em: datetime
     atualizado_em: Optional[datetime] = None
     fornecedores: List[ProdutoServicoFornecedor] = []
-
-    class Config:
-        from_attributes = True
 
 
 class ProdutoServicoHistoricoPrecoBase(BaseModel):
@@ -100,9 +97,8 @@ class ProdutoServicoHistoricoPrecoCreate(ProdutoServicoHistoricoPrecoBase):
 
 
 class ProdutoServicoHistoricoPreco(ProdutoServicoHistoricoPrecoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     produto_servico_id: int
     registrado_em: datetime
-
-    class Config:
-        from_attributes = True

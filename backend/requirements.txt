@@ -7,14 +7,8 @@ pydantic-settings==2.3.4
 email-validator==2.1.1
 openpyxl==3.1.5
 pytz==2024.1
-psycopg2-binary==2.9.9
-
-# Database drivers
-# Para PostgreSQL (já incluído acima: psycopg2-binary)
-# Para MySQL (descomente se usar MySQL no cPanel)
-# pymysql==1.1.0
-
-# WSGI adapter para cPanel/Passenger
+# PostgreSQL driver (psycopg3 é compatível com Python 3.13)
+psycopg[binary]>=3.2.13
 a2wsgi==1.10.4
 
 # Auth dependencies
@@ -24,3 +18,23 @@ reportlab==4.2.0
 
 # Alembic para migrações
 alembic==1.13.1
+
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+httpx==0.25.2  # Para TestClient do FastAPI
+
+# Code quality
+black==23.12.1
+flake8==6.1.0
+isort==5.13.2
+mypy==1.7.1
+
+# Security
+python-multipart==0.0.6
+argon2-cffi==23.1.0

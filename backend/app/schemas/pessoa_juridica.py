@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 from .contato import Contato
@@ -122,10 +122,9 @@ class PessoaJuridicaUpdate(BaseModel):
         return cnpj
 
 class PessoaJuridica(PessoaJuridicaBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     criado_em: datetime
     atualizado_em: Optional[datetime] = None
     contatos: List[Contato] = []
-    
-    class Config:
-        from_attributes = True

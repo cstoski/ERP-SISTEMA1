@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import date, datetime
 
@@ -36,6 +36,8 @@ class DespesaProjetoUpdate(BaseModel):
 
 
 class DespesaProjeto(DespesaProjetoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     numero_despesa: str
     criado_em: datetime
@@ -45,6 +47,3 @@ class DespesaProjeto(DespesaProjetoBase):
     projeto: Optional[dict] = None
     fornecedor: Optional[dict] = None
     tecnico_responsavel: Optional[dict] = None
-
-    class Config:
-        from_attributes = True

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -21,10 +21,9 @@ class ContatoUpdate(BaseModel):
     pessoa_juridica_id: Optional[int] = None
 
 class Contato(ContatoBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     pessoa_juridica_id: int
     criado_em: datetime
     atualizado_em: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
