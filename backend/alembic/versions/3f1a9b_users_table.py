@@ -22,7 +22,7 @@ def upgrade():
         sa.Column('email', sa.String(length=256), nullable=False),
         sa.Column('hashed_password', sa.String(length=256), nullable=False),
         sa.Column('role', sa.String(length=50), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=True, server_default=sa.text('1')),
+        sa.Column('is_active', sa.Boolean(), nullable=True, server_default=sa.text('true')),
         sa.Column('criado_em', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
         sa.Column('atualizado_em', sa.DateTime(timezone=True), nullable=True),
     )
