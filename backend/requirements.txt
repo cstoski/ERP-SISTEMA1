@@ -1,44 +1,41 @@
+
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
 sqlalchemy==2.0.36
-pydantic==2.9.2
 python-dotenv==1.0.1
-pydantic-settings==2.3.4
 email-validator==2.1.1
 openpyxl==3.1.5
 pytz==2024.1
-# PostgreSQL driver (psycopg3 é compatível com Python 3.13)
 psycopg[binary]>=3.2.13
 a2wsgi==1.10.4
-
-# Auth dependencies
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 reportlab==4.2.0
-
-# Alembic para migrações
-alembic==1.13.1
-
-# ============================================================================
-# DEVELOPMENT & TESTING
-# ============================================================================
-
-# Testing
-pytest==7.4.3
-pytest-cov==4.1.0
-pytest-asyncio==0.21.1
-httpx==0.25.2  # Para TestClient do FastAPI
-
-# Code quality
-black==23.12.1
-flake8==6.1.0
-isort==5.13.2
-mypy==1.7.1
-
-# Security
-python-multipart==0.0.6
-argon2-cffi==23.1.0
-
-# OneDrive Integration
-msal==1.31.1
-requests==2.32.3
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-dotenv
+email-validator
+openpyxl
+pytz
+psycopg[binary]
+a2wsgi
+passlib[bcrypt]
+python-jose[cryptography]
+reportlab
+alembic
+pytest
+pytest-cov
+pytest-asyncio
+httpx
+black
+flake8
+isort
+mypy
+python-multipart
+argon2-cffi
+msal
+requests
+setuptools
+wheel
+pyyaml

@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime
 
 from ..database import get_db
-from ..models.despesa_projeto import DespesaProjeto
+from ..models.despesa_projeto import DespesaProjeto, DespesaProjetoItem
 from ..models.projeto import Projeto
 from ..models.pessoa_juridica import PessoaJuridica
 from ..models.funcionario import Funcionario
@@ -12,6 +12,11 @@ from ..schemas.despesa_projeto import (
     DespesaProjeto as DespesaProjetoSchema,
     DespesaProjetoCreate,
     DespesaProjetoUpdate,
+)
+from ..schemas.despesa_projeto_item import (
+    DespesaProjetoItem as DespesaProjetoItemSchema,
+    DespesaProjetoItemCreate,
+    DespesaProjetoItemUpdate,
 )
 
 router = APIRouter()
@@ -68,6 +73,7 @@ def listar_despesas(db: Session = Depends(get_db)):
             "projeto_id": despesa.projeto_id,
             "fornecedor_id": despesa.fornecedor_id,
             "tecnico_responsavel_id": despesa.tecnico_responsavel_id,
+            "contato_id": despesa.contato_id,
             "status": despesa.status,
             "data_pedido": despesa.data_pedido,
             "previsao_entrega": despesa.previsao_entrega,
@@ -116,6 +122,7 @@ def obter_despesa(despesa_id: int, db: Session = Depends(get_db)):
         "projeto_id": despesa.projeto_id,
         "fornecedor_id": despesa.fornecedor_id,
         "tecnico_responsavel_id": despesa.tecnico_responsavel_id,
+        "contato_id": despesa.contato_id,
         "status": despesa.status,
         "data_pedido": despesa.data_pedido,
         "previsao_entrega": despesa.previsao_entrega,
@@ -176,6 +183,7 @@ def criar_despesa(despesa: DespesaProjetoCreate, db: Session = Depends(get_db)):
         "projeto_id": despesa_completa.projeto_id,
         "fornecedor_id": despesa_completa.fornecedor_id,
         "tecnico_responsavel_id": despesa_completa.tecnico_responsavel_id,
+        "contato_id": despesa_completa.contato_id,
         "status": despesa_completa.status,
         "data_pedido": despesa_completa.data_pedido,
         "previsao_entrega": despesa_completa.previsao_entrega,
@@ -234,6 +242,7 @@ def atualizar_despesa(despesa_id: int, despesa: DespesaProjetoUpdate, db: Sessio
         "projeto_id": despesa_completa.projeto_id,
         "fornecedor_id": despesa_completa.fornecedor_id,
         "tecnico_responsavel_id": despesa_completa.tecnico_responsavel_id,
+        "contato_id": despesa_completa.contato_id,
         "status": despesa_completa.status,
         "data_pedido": despesa_completa.data_pedido,
         "previsao_entrega": despesa_completa.previsao_entrega,
@@ -275,3 +284,47 @@ def deletar_despesa(despesa_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"detail": "Despesa deletada com sucesso"}
+
+
+# CRUD de itens de despesa de projeto
+@router.get("/despesas-projetos/{despesa_id}/itens", response_model=List[DespesaProjetoItemSchema])
+def listar_itens_despesa(despesa_id: int, db: Session = Depends(get_db)):
+    itens = db.query(DespesaProjetoItem).filter(DespesaProjetoItem.despesa_projeto_id == despesa_id).all()
+    return itens
+
+@router.post("/despesas-projetos/{despesa_id}/itens", response_model=DespesaProjetoItemSchema)
+def criar_item_despesa(despesa_id: int, item: DespesaProjetoItemCreate, db: Session = Depends(get_db)):
+    if item.despesa_projeto_id != despesa_id:
+        raise HTTPException(status_code=400, detail="ID de despesa inconsistente")
+    db_item = DespesaProjetoItem(**item.model_dump())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@router.get("/despesas-projetos/itens/{item_id}", response_model=DespesaProjetoItemSchema)
+def obter_item_despesa(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(DespesaProjetoItem).filter(DespesaProjetoItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    return item
+
+@router.put("/despesas-projetos/itens/{item_id}", response_model=DespesaProjetoItemSchema)
+def atualizar_item_despesa(item_id: int, item: DespesaProjetoItemUpdate, db: Session = Depends(get_db)):
+    db_item = db.query(DespesaProjetoItem).filter(DespesaProjetoItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    for key, value in item.model_dump(exclude_unset=True).items():
+        setattr(db_item, key, value)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@router.delete("/despesas-projetos/itens/{item_id}")
+def deletar_item_despesa(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(DespesaProjetoItem).filter(DespesaProjetoItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    db.delete(db_item)
+    db.commit()
+    return {"detail": "Item deletado com sucesso"}

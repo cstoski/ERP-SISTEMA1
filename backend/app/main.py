@@ -53,6 +53,7 @@ app.add_middleware(
 )
 
 logger.info(f"Aplicação iniciada - Ambiente: {settings.ENVIRONMENT}")
+logger.info(f"Banco de dados em uso: {settings.get_database_url()}")
 logger.info(f"CORS configurado para: {allowed_origins}")
 
 app.include_router(

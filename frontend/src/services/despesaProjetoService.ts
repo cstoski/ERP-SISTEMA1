@@ -36,6 +36,7 @@ export interface DespesaProjetoCreate {
   projeto_id: number;
   fornecedor_id: number;
   tecnico_responsavel_id: number;
+  contato_id?: number;
   status: string;
   data_pedido: string;
   previsao_entrega?: string;

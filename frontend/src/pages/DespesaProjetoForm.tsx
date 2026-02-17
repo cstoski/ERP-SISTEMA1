@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import despesaProjetoService, { DespesaProjetoCreate } from '../services/despesaProjetoService';
+import { contatoService, Contato } from '../services/contatoService';
 import { projetoService } from '../services/projetoService';
 import { pessoaJuridicaService, PessoaJuridica } from '../services/pessoaJuridicaService';
 import { funcionarioService } from '../services/funcionarioService';
@@ -26,11 +27,13 @@ const DespesaProjetoForm: React.FC = () => {
   const [fornecedores, setFornecedores] = useState<PessoaJuridica[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loading, setLoading] = useState(false);
+  const [contatos, setContatos] = useState<Contato[]>([]);
 
-  const [formData, setFormData] = useState<DespesaProjetoCreate>({
+  const [formData, setFormData] = useState<any>({
     projeto_id: 0,
     fornecedor_id: 0,
     tecnico_responsavel_id: 0,
+    contato_id: 0,
     status: 'Rascunho',
     data_pedido: new Date().toISOString().split('T')[0],
     previsao_entrega: '',
@@ -66,6 +69,20 @@ const DespesaProjetoForm: React.FC = () => {
     }
   };
 
+  const carregarContatos = async (fornecedorId: number) => {
+    if (!fornecedorId) {
+      setContatos([]);
+      setFormData((prev: any) => ({ ...prev, contato_id: 0 }));
+      return;
+    }
+    try {
+      const res = await contatoService.listar(fornecedorId);
+      setContatos(res.data);
+    } catch (err) {
+      setContatos([]);
+    }
+  };
+
   const carregarDespesa = async () => {
     if (!id) return;
     
@@ -86,7 +103,9 @@ const DespesaProjetoForm: React.FC = () => {
         tipo_frete: despesa.tipo_frete || 'CIF',
         valor_frete: despesa.valor_frete,
         observacoes: despesa.observacoes || '',
+        contato_id: despesa.contato_id || 0,
       });
+      if (despesa.fornecedor_id) carregarContatos(despesa.fornecedor_id);
     } catch (err) {
       console.error('Erro ao carregar despesa:', err);
       alert('Erro ao carregar despesa.');
@@ -150,10 +169,15 @@ const DespesaProjetoForm: React.FC = () => {
       processedValue = value;
     }
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: processedValue,
-    }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: processedValue };
+      // Se mudar o fornecedor, limpa e carrega contatos
+      if (name === 'fornecedor_id') {
+        carregarContatos(Number(processedValue));
+        updated.contato_id = 0;
+      }
+      return updated;
+    });
   };
 
   return (
@@ -197,6 +221,24 @@ const DespesaProjetoForm: React.FC = () => {
                   {fornecedores.map(fornecedor => (
                     <option key={fornecedor.id} value={fornecedor.id}>
                       {fornecedor.razao_social}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Contato do Fornecedor</label>
+                <select
+                  name="contato_id"
+                  className="form-input"
+                  value={formData.contato_id}
+                  onChange={handleChange}
+                  disabled={!formData.fornecedor_id || contatos.length === 0}
+                  required={contatos.length > 0}
+                >
+                  <option value="">Selecione um contato</option>
+                  {contatos.map(contato => (
+                    <option key={contato.id} value={contato.id}>
+                      {contato.nome}
                     </option>
                   ))}
                 </select>
